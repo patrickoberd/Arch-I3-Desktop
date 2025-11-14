@@ -114,6 +114,19 @@ bindsym $mod+Shift+8 move container to workspace number $ws8
 bindsym $mod+Shift+9 move container to workspace number $ws9
 bindsym $mod+Shift+0 move container to workspace number $ws10
 
+# Alternative keybindings for moving containers (noVNC/browser-friendly)
+# Use Ctrl instead of Shift for better compatibility with web-based VNC clients
+bindsym $mod+Ctrl+1 move container to workspace number $ws1
+bindsym $mod+Ctrl+2 move container to workspace number $ws2
+bindsym $mod+Ctrl+3 move container to workspace number $ws3
+bindsym $mod+Ctrl+4 move container to workspace number $ws4
+bindsym $mod+Ctrl+5 move container to workspace number $ws5
+bindsym $mod+Ctrl+6 move container to workspace number $ws6
+bindsym $mod+Ctrl+7 move container to workspace number $ws7
+bindsym $mod+Ctrl+8 move container to workspace number $ws8
+bindsym $mod+Ctrl+9 move container to workspace number $ws9
+bindsym $mod+Ctrl+0 move container to workspace number $ws10
+
 # Reload the configuration file
 bindsym $mod+Shift+c reload
 
@@ -122,6 +135,9 @@ bindsym $mod+Shift+r restart
 
 # Exit i3 (logs you out of your X session)
 bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'Exit i3?' -B 'Yes, exit i3' 'i3-msg exit'"
+
+# Move window to workspace via rofi menu (visual picker, great for mouse/noVNC)
+bindsym $mod+Shift+w exec --no-startup-id "i3-msg move container to workspace \\"$(i3-msg -t get_workspaces | jq -r '.[].name' | rofi -dmenu -p 'Move to workspace:' -theme Arc-Dark)\\""
 
 # Resize window mode
 mode "resize" {
