@@ -154,6 +154,11 @@ resource "kubernetes_persistent_volume_claim" "home" {
   metadata {
     name      = "home-${lower(data.coder_workspace_owner.me.name)}-${lower(data.coder_workspace.me.name)}"
     namespace = kubernetes_namespace.workspace.metadata[0].name
+
+    labels = {
+      "coder.owner"     = data.coder_workspace_owner.me.name
+      "coder.workspace" = data.coder_workspace.me.name
+    }
   }
 
   spec {
