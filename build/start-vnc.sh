@@ -11,6 +11,12 @@ if [ ! -f "$HOME/.workspace-initialized" ]; then
     mkdir -p ~/.config/{i3,dunst,alacritty,code-server}
     mkdir -p ~/.local/share/code-server
 
+    # Copy oh-my-zsh if it exists in skeleton
+    if [ -d /etc/skel/.oh-my-zsh ]; then
+        echo "Installing oh-my-zsh..."
+        cp -r /etc/skel/.oh-my-zsh ~/.oh-my-zsh
+    fi
+
     # Copy default configs if they don't exist
     [ -f /etc/skel/.config/i3/config ] && cp -n /etc/skel/.config/i3/config ~/.config/i3/config
     [ -f /etc/skel/.config/i3/i3status.conf ] && cp -n /etc/skel/.config/i3/i3status.conf ~/.config/i3/i3status.conf

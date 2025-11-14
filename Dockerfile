@@ -76,11 +76,11 @@ RUN CODE_SERVER_VERSION=4.96.2 && \
 RUN useradd -m -s /bin/zsh -G wheel coder && \
     echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Install oh-my-zsh for coder user
-RUN su - coder -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' && \
-    su - coder -c 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k' && \
-    su - coder -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions' && \
-    su - coder -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
+# Install oh-my-zsh to /etc/skel (will be copied to home directory at runtime)
+RUN git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /etc/skel/.oh-my-zsh && \
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /etc/skel/.oh-my-zsh/custom/themes/powerlevel10k && \
+    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions /etc/skel/.oh-my-zsh/custom/plugins/zsh-autosuggestions && \
+    git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git /etc/skel/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
 # Note: Coder agent is installed at runtime in start-vnc.sh
 # This ensures the correct version is always used
