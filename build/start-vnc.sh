@@ -3,6 +3,25 @@ set -euo pipefail
 
 echo "Starting desktop environment..."
 
+# Initialize home directory with default configs on first run
+if [ ! -f "$HOME/.workspace-initialized" ]; then
+    echo "First run detected, installing default configurations..."
+
+    # Create config directories
+    mkdir -p ~/.config/{i3,dunst,alacritty,code-server}
+    mkdir -p ~/.local/share/code-server
+
+    # Copy default configs if they don't exist
+    [ -f /etc/skel/.config/i3/config ] && cp -n /etc/skel/.config/i3/config ~/.config/i3/config
+    [ -f /etc/skel/.config/i3/i3status.conf ] && cp -n /etc/skel/.config/i3/i3status.conf ~/.config/i3/i3status.conf
+    [ -f /etc/skel/.config/dunst/dunstrc ] && cp -n /etc/skel/.config/dunst/dunstrc ~/.config/dunst/dunstrc
+    [ -f /etc/skel/.config/alacritty/alacritty.toml ] && cp -n /etc/skel/.config/alacritty/alacritty.toml ~/.config/alacritty/alacritty.toml
+    [ -f /etc/skel/.zshrc ] && cp -n /etc/skel/.zshrc ~/.zshrc
+
+    touch "$HOME/.workspace-initialized"
+    echo "Configuration installed"
+fi
+
 # Setup display
 export DISPLAY=:1
 export XDG_RUNTIME_DIR=/tmp/runtime-coder

@@ -74,11 +74,7 @@ RUN CODE_SERVER_VERSION=4.96.2 && \
 
 # Create user
 RUN useradd -m -s /bin/zsh -G wheel coder && \
-    echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-    mkdir -p /home/coder/.vnc /home/coder/.config/i3 /home/coder/.config/alacritty && \
-    mkdir -p /home/coder/.config/code-server /home/coder/.local/share/code-server && \
-    mkdir -p /home/coder/.config/dunst && \
-    chown -R coder:coder /home/coder
+    echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install oh-my-zsh for coder user
 RUN su - coder -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' && \
@@ -89,16 +85,20 @@ RUN su - coder -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh
 # Note: Coder agent is installed at runtime in start-vnc.sh
 # This ensures the correct version is always used
 
-# Copy configuration files
-COPY build/i3-config /home/coder/.config/i3/config
-COPY build/i3status.conf /home/coder/.config/i3/i3status.conf
-COPY build/dunstrc /home/coder/.config/dunst/dunstrc
+# Copy default configuration files to skeleton directory
+# These will be copied to user home on first run
+RUN mkdir -p /etc/skel/.config/i3 /etc/skel/.config/dunst /etc/skel/.config/alacritty
+COPY build/i3-config /etc/skel/.config/i3/config
+COPY build/i3status.conf /etc/skel/.config/i3/i3status.conf
+COPY build/dunstrc /etc/skel/.config/dunst/dunstrc
+COPY build/.zshrc /etc/skel/.zshrc
+
+# Copy startup scripts
 COPY build/start-vnc.sh /usr/local/bin/start-vnc.sh
 COPY build/setup-i3-modkey.sh /usr/local/bin/setup-i3-modkey.sh
-COPY build/.zshrc /home/coder/.zshrc
 
 # Create alacritty config
-RUN cat > /home/coder/.config/alacritty/alacritty.toml << 'EOF'
+RUN cat > /etc/skel/.config/alacritty/alacritty.toml << 'EOF'
 [window]
 opacity = 0.95
 padding = { x = 10, y = 10 }
@@ -126,11 +126,10 @@ mods = "Control|Shift"
 action = "Copy"
 EOF
 
-# Make scripts executable and set ownership
+# Make scripts executable
 # Note: No VNC password needed - secured by Coder authentication + localhost-only access
 RUN chmod +x /usr/local/bin/start-vnc.sh && \
-    chmod +x /usr/local/bin/setup-i3-modkey.sh && \
-    chown -R coder:coder /home/coder
+    chmod +x /usr/local/bin/setup-i3-modkey.sh
 
 # Environment setup
 ENV DISPLAY=:1
