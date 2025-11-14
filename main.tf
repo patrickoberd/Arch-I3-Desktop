@@ -10,12 +10,6 @@ terraform {
 }
 
 # Workspace parameters
-variable "namespace" {
-  description = "Kubernetes namespace for workspace"
-  default     = "coder-workspaces"
-  type        = string
-}
-
 variable "cpu" {
   description = "CPU cores for workspace"
   default     = "2"
@@ -50,6 +44,11 @@ variable "coder_url" {
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
+# Locals for dynamic values
+locals {
+  namespace = "coder-${data.coder_workspace_owner.me.name}"
+}
+
 # Coder agent for authentication and connection
 resource "coder_agent" "main" {
   arch           = "amd64"
@@ -75,16 +74,16 @@ resource "coder_agent" "main" {
 
   # Metadata
   display_apps {
-    vscode          = false
-    vscode_insiders = false
-    web_terminal    = true
+    vscode                 = false
+    vscode_insiders        = false
+    web_terminal           = true
     port_forwarding_helper = true
-    ssh_helper      = true
+    ssh_helper             = true
   }
 
   env = {
-    GIT_AUTHOR_NAME  = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
-    GIT_AUTHOR_EMAIL = data.coder_workspace_owner.me.email
+    GIT_AUTHOR_NAME     = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
+    GIT_AUTHOR_EMAIL    = data.coder_workspace_owner.me.email
     GIT_COMMITTER_NAME  = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
     GIT_COMMITTER_EMAIL = data.coder_workspace_owner.me.email
   }
@@ -135,10 +134,18 @@ resource "coder_app" "terminal" {
   command      = "zsh"
 }
 
-# Kubernetes namespace for workspaces
+# Kubernetes namespace for user's workspaces
 resource "kubernetes_namespace" "workspace" {
   metadata {
-    name = var.namespace
+    name = local.namespace
+    labels = {
+      "coder.owner" = data.coder_workspace_owner.me.name
+    }
+  }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [metadata[0].annotations]
   }
 }
 
@@ -150,8 +157,8 @@ resource "kubernetes_persistent_volume_claim" "home" {
   }
 
   spec {
-    access_modes = ["ReadWriteOnce"]
-    storage_class_name = "exoscale-sbs"  # Exoscale Block Storage
+    access_modes       = ["ReadWriteOnce"]
+    storage_class_name = "exoscale-sbs" # Exoscale Block Storage
 
     resources {
       requests = {
