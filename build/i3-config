@@ -241,19 +241,35 @@ default_floating_border pixel 2
 # Application shortcuts
 bindsym $mod+Shift+f exec firefox
 bindsym $mod+Shift+t exec thunar
-# VS Code (code-server) access via browser
-bindsym $mod+c exec firefox http://localhost:8080
-
-# Screenshot (using maim - better selection and quality)
-bindsym Print exec maim ~/screenshot_$(date +%Y%m%d_%H%M%S).png && notify-send "Screenshot" "Full screen captured"
-bindsym $mod+Print exec maim -s ~/screenshot_$(date +%Y%m%d_%H%M%S).png && notify-send "Screenshot" "Selection captured"
-bindsym $mod+Shift+s exec maim -s ~/screenshot_$(date +%Y%m%d_%H%M%S).png && notify-send "Screenshot" "Selection captured"
+# VS Code (code-server) access via browser (moved to quick actions menu - Mod+z)
 
 # Clipboard manager (simple xclip-based)
 bindsym $mod+Insert exec --no-startup-id xclip -o -selection clipboard | rofi -dmenu -p "Clipboard"
 
 # Resolution changer (dynamic VNC resolution)
 bindsym $mod+F12 exec --no-startup-id /usr/local/bin/resolution-menu.sh
+
+# ===== QUALITY OF LIFE SHORTCUTS =====
+
+# Terminal with tmux
+bindsym $mod+Shift+t exec alacritty -e tmux attach || alacritty -e tmux new
+
+# File upload/download server toggle
+bindsym $mod+u exec --no-startup-id /usr/local/bin/file-server.sh toggle
+
+# Quick actions menu (favorites/shortcuts)
+bindsym $mod+z exec --no-startup-id /usr/local/bin/quick-actions.sh
+
+# Clipboard manager (clipboard history)
+bindsym $mod+c exec --no-startup-id clipmenu -p "Clipboard:" -theme Arc-Dark
+
+# Quick note taking
+bindsym $mod+n exec --no-startup-id sh -c 'TEXT=$(rofi -dmenu -p "Quick Note:" -theme Arc-Dark -lines 0) && [ -n "$TEXT" ] && echo "## $(date +%H:%M) - $TEXT" >> ~/notes/$(date +%Y-%m-%d).md && notify-send "Note Saved" "Added to $(date +%Y-%m-%d).md" -t 3000'
+
+# Enhanced screenshots (replaces default)
+bindsym Print exec --no-startup-id /usr/local/bin/screenshot.sh full
+bindsym $mod+Print exec --no-startup-id /usr/local/bin/screenshot.sh select
+bindsym $mod+Shift+Print exec --no-startup-id /usr/local/bin/screenshot.sh window
 
 # Lock screen
 bindsym $mod+x exec i3lock -c 000000
@@ -262,6 +278,8 @@ bindsym $mod+x exec i3lock -c 000000
 exec --no-startup-id feh --bg-scale /usr/share/backgrounds/archlinux/simple.png || true
 # Notification daemon
 exec --no-startup-id dunst
+# Clipboard manager daemon
+exec --no-startup-id clipmenud
 # Scratchpad terminal (already defined in window rules above)
 
 # First-boot setup: Choose Mod key interactively

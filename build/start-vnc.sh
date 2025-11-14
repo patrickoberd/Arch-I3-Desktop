@@ -14,6 +14,7 @@ if [ ! -f "$HOME/.workspace-initialized" ]; then
     # Create config directories
     mkdir -p ~/.config/{i3,dunst,alacritty,code-server}
     mkdir -p ~/.local/share/code-server
+    mkdir -p ~/notes ~/Pictures/screenshots ~/Downloads
 
     # Copy oh-my-zsh if it exists in skeleton
     if [ -d /etc/skel/.oh-my-zsh ]; then
@@ -27,6 +28,19 @@ if [ ! -f "$HOME/.workspace-initialized" ]; then
     [ -f /etc/skel/.config/dunst/dunstrc ] && cp -n /etc/skel/.config/dunst/dunstrc ~/.config/dunst/dunstrc
     [ -f /etc/skel/.config/alacritty/alacritty.toml ] && cp -n /etc/skel/.config/alacritty/alacritty.toml ~/.config/alacritty/alacritty.toml
     [ -f /etc/skel/.zshrc ] && cp -n /etc/skel/.zshrc ~/.zshrc
+    [ -f /etc/skel/.tmux.conf ] && cp -n /etc/skel/.tmux.conf ~/.tmux.conf
+
+    # Copy Continue.dev configuration for AI coding assistant
+    if [ -f /etc/skel/.continue/config.json ]; then
+        mkdir -p ~/.continue
+        cp -n /etc/skel/.continue/config.json ~/.continue/config.json
+        echo "Continue.dev AI assistant configured"
+    fi
+
+    # Install Continue.dev extension for code-server
+    echo "Installing Continue.dev extension for AI coding assistance..."
+    code-server --install-extension Continue.continue --force 2>/dev/null || \
+        echo "Note: Continue extension will be available after code-server restart"
 
     touch "$HOME/.workspace-initialized"
     echo "Configuration installed"
@@ -124,7 +138,7 @@ echo "Desktop environment is ready"
 echo ""
 echo "Access methods:"
 echo "  - Desktop (noVNC):  http://localhost:6080"
-echo "  - VS Code:          http://localhost:8080"
+echo "  - VS Code Web IDE:  http://localhost:8080 (open in Firefox)"
 echo "  - VNC Access:       Via Coder dashboard (authenticated)"
 echo "  - Security:         localhost-only, no password needed"
 echo ""

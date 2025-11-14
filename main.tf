@@ -284,8 +284,10 @@ output "access_instructions" {
     Access your desktop:
        Click the "Desktop (noVNC)" app in the Coder dashboard
 
-    Access VS Code:
-       Click the "VS Code" app for a browser-based IDE
+    Access VS Code Web IDE:
+       Click the "VS Code" app in the Coder dashboard
+       Or open Firefox and navigate to: http://localhost:8080
+       (Firefox opens automatically on first workspace launch)
 
     Access terminal:
        Click the "Terminal" app or use SSH

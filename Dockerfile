@@ -43,6 +43,9 @@ RUN pacman -S --noconfirm \
     ranger thunar \
     # Browsers & GUI apps
     firefox \
+    # QoL tools
+    qalculate-gtk \
+    clipmenu \
     # Networking
     net-tools iproute2 bind openbsd-netcat \
     # Container tools
@@ -92,11 +95,47 @@ COPY build/i3-config /etc/skel/.config/i3/config
 COPY build/i3status.conf /etc/skel/.config/i3/i3status.conf
 COPY build/dunstrc /etc/skel/.config/dunst/dunstrc
 COPY build/.zshrc /etc/skel/.zshrc
+COPY build/.tmux.conf /etc/skel/.tmux.conf
+
+# Create Continue.dev configuration for Ollama AI coding assistant
+RUN mkdir -p /etc/skel/.continue && \
+    cat > /etc/skel/.continue/config.json << 'EOF'
+{
+  "models": [
+    {
+      "title": "Llama 3.3 70B",
+      "provider": "ollama",
+      "model": "llama3.3:70b",
+      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+    },
+    {
+      "title": "CodeLlama",
+      "provider": "ollama",
+      "model": "codellama",
+      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Starcoder 3b",
+    "provider": "ollama",
+    "model": "starcoder2:3b",
+    "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+  },
+  "embeddingsProvider": {
+    "provider": "transformers.js"
+  }
+}
+EOF
 
 # Copy startup scripts
 COPY build/start-vnc.sh /usr/local/bin/start-vnc.sh
 COPY build/setup-i3-modkey.sh /usr/local/bin/setup-i3-modkey.sh
 COPY build/resolution-menu.sh /usr/local/bin/resolution-menu.sh
+
+# Copy QoL scripts
+COPY build/file-server.sh /usr/local/bin/file-server.sh
+COPY build/quick-actions.sh /usr/local/bin/quick-actions.sh
+COPY build/screenshot.sh /usr/local/bin/screenshot.sh
 
 # Create alacritty config
 RUN cat > /etc/skel/.config/alacritty/alacritty.toml << 'EOF'
@@ -131,7 +170,10 @@ EOF
 # Note: No VNC password needed - secured by Coder authentication + localhost-only access
 RUN chmod +x /usr/local/bin/start-vnc.sh && \
     chmod +x /usr/local/bin/setup-i3-modkey.sh && \
-    chmod +x /usr/local/bin/resolution-menu.sh
+    chmod +x /usr/local/bin/resolution-menu.sh && \
+    chmod +x /usr/local/bin/file-server.sh && \
+    chmod +x /usr/local/bin/quick-actions.sh && \
+    chmod +x /usr/local/bin/screenshot.sh
 
 # Environment setup
 ENV DISPLAY=:1

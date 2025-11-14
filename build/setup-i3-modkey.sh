@@ -112,6 +112,10 @@ Your Mod key is now set to: $MODKEY_NAME
      NOTE: If Mod+Shift+1-9 causes issues with your terminal app,
      use Mod+Ctrl+1-9 or Mod+Shift+w instead to move windows.
 
+  🌐 WEB APPS:
+     VS Code Web IDE:  http://localhost:8080
+     (Firefox will open automatically with VS Code)
+
   ⚙️  SYSTEM:
      Mod+Shift+c       Reload i3 config
      Mod+Shift+r       Restart i3
@@ -122,4 +126,20 @@ Your Mod key is now set to: $MODKEY_NAME
 
 📚 For more help, visit: https://i3wm.org/docs/userguide.html
 
-Press Enter to reload i3 and start using your desktop...
+Press Enter to restart i3 and start using your desktop...
+EOF
+
+read -r
+
+# Automatically restart i3 to apply the new Mod key configuration
+echo ""
+echo "Restarting i3 to apply changes..."
+sleep 1
+i3-msg restart
+
+# Wait for i3 to restart, then open Firefox with VS Code
+sleep 2
+echo "Opening VS Code in Firefox..."
+firefox http://localhost:8080 &
+
+exit 0
