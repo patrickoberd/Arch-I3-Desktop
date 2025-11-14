@@ -252,6 +252,9 @@ bindsym $mod+Shift+s exec maim -s ~/screenshot_$(date +%Y%m%d_%H%M%S).png && not
 # Clipboard manager (simple xclip-based)
 bindsym $mod+Insert exec --no-startup-id xclip -o -selection clipboard | rofi -dmenu -p "Clipboard"
 
+# Resolution changer (dynamic VNC resolution)
+bindsym $mod+F12 exec --no-startup-id /usr/local/bin/resolution-menu.sh
+
 # Lock screen
 bindsym $mod+x exec i3lock -c 000000
 

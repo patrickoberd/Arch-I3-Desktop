@@ -96,6 +96,7 @@ COPY build/.zshrc /etc/skel/.zshrc
 # Copy startup scripts
 COPY build/start-vnc.sh /usr/local/bin/start-vnc.sh
 COPY build/setup-i3-modkey.sh /usr/local/bin/setup-i3-modkey.sh
+COPY build/resolution-menu.sh /usr/local/bin/resolution-menu.sh
 
 # Create alacritty config
 RUN cat > /etc/skel/.config/alacritty/alacritty.toml << 'EOF'
@@ -129,7 +130,8 @@ EOF
 # Make scripts executable
 # Note: No VNC password needed - secured by Coder authentication + localhost-only access
 RUN chmod +x /usr/local/bin/start-vnc.sh && \
-    chmod +x /usr/local/bin/setup-i3-modkey.sh
+    chmod +x /usr/local/bin/setup-i3-modkey.sh && \
+    chmod +x /usr/local/bin/resolution-menu.sh
 
 # Environment setup
 ENV DISPLAY=:1

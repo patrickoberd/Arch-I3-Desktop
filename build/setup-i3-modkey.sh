@@ -14,7 +14,7 @@ fi
 
 # Clear screen and show banner
 clear
-cat << 'EOF'
+cat << 'BANNER'
 ╔════════════════════════════════════════════════════════════════════╗
 ║                                                                    ║
 ║            🎨 Welcome to Arch Linux i3wm Desktop! 🎨                ║
@@ -28,7 +28,7 @@ The main modifier key (Mod) is used for most commands.
 
 Let's configure your preferred Mod key!
 
-EOF
+BANNER
 
 echo "Available options:"
 echo ""
@@ -91,6 +91,7 @@ Your Mod key is now set to: $MODKEY_NAME
      Mod+Shift+q       Close window
      Mod+f             Toggle fullscreen
      Mod+Shift+Space   Toggle floating mode
+     Right-Click       Window menu (layout, floating, sticky, etc.)
 
   🎯 NAVIGATION:
      Mod+h/j/k/l       Focus left/down/up/right (vim-style)
@@ -105,7 +106,11 @@ Your Mod key is now set to: $MODKEY_NAME
 
   🏢 WORKSPACES:
      Mod+1 to Mod+9    Switch to workspace 1-9
-     Mod+Shift+1-9     Move window to workspace
+     Mod+Ctrl+1-9      Move window to workspace (alternative method)
+     Mod+Shift+w       Move window via interactive menu (visual picker)
+
+     NOTE: If Mod+Shift+1-9 causes issues with your terminal app,
+     use Mod+Ctrl+1-9 or Mod+Shift+w instead to move windows.
 
   ⚙️  SYSTEM:
      Mod+Shift+c       Reload i3 config
@@ -115,12 +120,6 @@ Your Mod key is now set to: $MODKEY_NAME
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 TIP: Press Mod+Shift+r now to restart i3 and apply your settings!
-
 📚 For more help, visit: https://i3wm.org/docs/userguide.html
 
-Press Enter to close this window and start using i3...
-EOF
-
-read -r
-exit 0
+Press Enter to reload i3 and start using your desktop...

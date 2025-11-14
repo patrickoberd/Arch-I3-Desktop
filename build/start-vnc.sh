@@ -3,6 +3,10 @@ set -euo pipefail
 
 echo "Starting desktop environment..."
 
+# Set desktop resolution (can be overridden via DESKTOP_RESOLUTION env var)
+RESOLUTION="${DESKTOP_RESOLUTION:-1920x1080}"
+echo "Using resolution: $RESOLUTION"
+
 # Initialize home directory with default configs on first run
 if [ ! -f "$HOME/.workspace-initialized" ]; then
     echo "First run detected, installing default configurations..."
@@ -39,8 +43,8 @@ mkdir -p ~/.vnc
 
 # Configure VNC (localhost-only, no password - secured by Coder authentication)
 echo "Configuring secure VNC (localhost-only)..."
-cat > ~/.vnc/config << 'EOF'
-geometry=1920x1080
+cat > ~/.vnc/config << EOF
+geometry=$RESOLUTION
 depth=24
 localhost=yes
 alwaysshared=yes
@@ -68,7 +72,7 @@ sleep 1
 # Start VNC server using Xvnc directly
 echo "Starting VNC server on :1 (port 5901)..."
 Xvnc :1 \
-  -geometry 1920x1080 \
+  -geometry $RESOLUTION \
   -depth 24 \
   -rfbport 5901 \
   -SecurityTypes None \
@@ -176,13 +180,12 @@ while true; do
     if ! kill -0 $XVNC_PID 2>/dev/null; then
         echo "Xvnc died, restarting..."
         Xvnc :1 \
-          -geometry 1920x1080 \
+          -geometry $RESOLUTION \
           -depth 24 \
           -rfbport 5901 \
-          -SecurityTypes VncAuth \
-          -PasswordFile ~/.vnc/passwd \
+          -SecurityTypes None \
           -AlwaysShared \
-          -localhost no \
+          -localhost yes \
           &
         XVNC_PID=$!
         sleep 2
