@@ -1,0 +1,249 @@
+# i3 window manager configuration
+# Arch Linux Desktop for Coder
+
+# Set mod key (Mod1 = Alt, Mod4 = Super/Windows key)
+set $mod Mod4
+
+# Font for window titles and bar
+font pango:FiraCode Nerd Font 10
+
+# Use Mouse+$mod to drag floating windows
+floating_modifier $mod
+
+# Start a terminal
+bindsym $mod+Return exec alacritty
+bindsym $mod+Shift+Return exec alacritty
+
+# Kill focused window
+bindsym $mod+Shift+q kill
+bindsym $mod+q kill
+
+# Start dmenu (program launcher)
+bindsym $mod+d exec --no-startup-id dmenu_run -fn 'FiraCode Nerd Font-10'
+bindsym $mod+Shift+d exec --no-startup-id i3-dmenu-desktop
+
+# Alternative: Rofi launcher (modern dmenu replacement)
+bindsym $mod+p exec --no-startup-id rofi -show drun -theme Arc-Dark
+bindsym $mod+Shift+p exec --no-startup-id rofi -show run -theme Arc-Dark
+bindsym $mod+Tab exec --no-startup-id rofi -show window -theme Arc-Dark
+
+# Change focus (vim-style)
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# Alternative: arrow keys
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move focused window (vim-style)
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# Alternative: arrow keys
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Split in horizontal orientation
+bindsym $mod+b split h
+
+# Split in vertical orientation
+bindsym $mod+v split v
+
+# Enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen toggle
+
+# Change container layout (stacked, tabbed, toggle split)
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# Toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# Rofi launcher (primary - most intuitive binding)
+bindsym $mod+space exec --no-startup-id rofi -show drun -theme Arc-Dark
+
+# Focus the parent container
+bindsym $mod+a focus parent
+
+# Scratchpad (floating workspace for quick notes/terminals)
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus scratchpad show
+
+# Define names for default workspaces
+set $ws1 "1:term"
+set $ws2 "2:code"
+set $ws3 "3:web"
+set $ws4 "4:files"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9:music"
+set $ws10 "10:chat"
+
+# Switch to workspace
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+bindsym $mod+0 workspace number $ws10
+
+# Move focused container to workspace
+bindsym $mod+Shift+1 move container to workspace number $ws1
+bindsym $mod+Shift+2 move container to workspace number $ws2
+bindsym $mod+Shift+3 move container to workspace number $ws3
+bindsym $mod+Shift+4 move container to workspace number $ws4
+bindsym $mod+Shift+5 move container to workspace number $ws5
+bindsym $mod+Shift+6 move container to workspace number $ws6
+bindsym $mod+Shift+7 move container to workspace number $ws7
+bindsym $mod+Shift+8 move container to workspace number $ws8
+bindsym $mod+Shift+9 move container to workspace number $ws9
+bindsym $mod+Shift+0 move container to workspace number $ws10
+
+# Reload the configuration file
+bindsym $mod+Shift+c reload
+
+# Restart i3 inplace (preserves your layout/session)
+bindsym $mod+Shift+r restart
+
+# Exit i3 (logs you out of your X session)
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'Exit i3?' -B 'Yes, exit i3' 'i3-msg exit'"
+
+# Resize window mode
+mode "resize" {
+        bindsym h resize shrink width 10 px or 10 ppt
+        bindsym j resize grow height 10 px or 10 ppt
+        bindsym k resize shrink height 10 px or 10 ppt
+        bindsym l resize grow width 10 px or 10 ppt
+
+        bindsym Left resize shrink width 10 px or 10 ppt
+        bindsym Down resize grow height 10 px or 10 ppt
+        bindsym Up resize shrink height 10 px or 10 ppt
+        bindsym Right resize grow width 10 px or 10 ppt
+
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+        bindsym $mod+r mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# Colors (Catppuccin Mocha theme)
+set $rosewater #f5e0dc
+set $flamingo  #f2cdcd
+set $pink      #f5c2e7
+set $mauve     #cba6f7
+set $red       #f38ba8
+set $maroon    #eba0ac
+set $peach     #fab387
+set $yellow    #f9e2af
+set $green     #a6e3a1
+set $teal      #94e2d5
+set $sky       #89dceb
+set $sapphire  #74c7ec
+set $blue      #89b4fa
+set $lavender  #b4befe
+set $text      #cdd6f4
+set $subtext1  #bac2de
+set $subtext0  #a6adc8
+set $overlay2  #9399b2
+set $overlay1  #7f849c
+set $overlay0  #6c7086
+set $surface2  #585b70
+set $surface1  #45475a
+set $surface0  #313244
+set $base      #1e1e2e
+set $mantle    #181825
+set $crust     #11111b
+
+# target                 title     bg    text   indicator  border
+client.focused           $lavender $base $text  $rosewater $lavender
+client.focused_inactive  $overlay0 $base $text  $rosewater $overlay0
+client.unfocused         $overlay0 $base $text  $rosewater $overlay0
+client.urgent            $peach    $base $peach $overlay0  $peach
+client.placeholder       $overlay0 $base $text  $overlay0  $overlay0
+client.background        $base
+
+# Status bar
+bar {
+        status_command i3status -c ~/.config/i3/i3status.conf
+        position top
+
+        colors {
+            background         $base
+            statusline         $text
+            focused_statusline $text
+            separator          $overlay0
+
+            # target           border bg        text
+            focused_workspace  $base  $mauve    $crust
+            active_workspace   $base  $surface2 $text
+            inactive_workspace $base  $surface0 $text
+            urgent_workspace   $base  $red      $crust
+        }
+}
+
+# Application-specific rules
+# Workspace assignments
+for_window [class="Firefox"] move to workspace $ws3
+for_window [class="Thunar"] move to workspace $ws4
+for_window [class="Alacritty" title="^(?!scratchpad).*"] move to workspace $ws1
+
+# Auto-float windows
+for_window [window_role="pop-up"] floating enable
+for_window [window_role="task_dialog"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [window_type="menu"] floating enable
+for_window [class="Thunar" title="File Operation Progress"] floating enable
+for_window [class="Firefox" window_role="About"] floating enable
+
+# Scratchpad terminal
+for_window [class="Alacritty" title="scratchpad"] move scratchpad, border pixel 3
+exec --no-startup-id alacritty --title scratchpad
+
+# Gaps (optional, comment out if you prefer no gaps)
+gaps inner 8
+gaps outer 4
+
+# Window borders
+default_border pixel 2
+default_floating_border pixel 2
+
+# Application shortcuts
+bindsym $mod+Shift+f exec firefox
+bindsym $mod+Shift+t exec thunar
+# VS Code (code-server) access via browser
+bindsym $mod+c exec firefox http://localhost:8080
+
+# Screenshot (using maim - better selection and quality)
+bindsym Print exec maim ~/screenshot_$(date +%Y%m%d_%H%M%S).png && notify-send "Screenshot" "Full screen captured"
+bindsym $mod+Print exec maim -s ~/screenshot_$(date +%Y%m%d_%H%M%S).png && notify-send "Screenshot" "Selection captured"
+bindsym $mod+Shift+s exec maim -s ~/screenshot_$(date +%Y%m%d_%H%M%S).png && notify-send "Screenshot" "Selection captured"
+
+# Clipboard manager (simple xclip-based)
+bindsym $mod+Insert exec --no-startup-id xclip -o -selection clipboard | rofi -dmenu -p "Clipboard"
+
+# Lock screen
+bindsym $mod+x exec i3lock -c 000000
+
+# Startup applications
+exec --no-startup-id feh --bg-scale /usr/share/backgrounds/archlinux/simple.png || true
+# Notification daemon
+exec --no-startup-id dunst
+# Scratchpad terminal (already defined in window rules above)
+
+# First-boot setup: Choose Mod key interactively
+exec --no-startup-id bash -c 'if [ ! -f ~/.config/i3/modkey-configured ]; then alacritty -e bash /usr/local/bin/setup-i3-modkey.sh; else alacritty; fi'

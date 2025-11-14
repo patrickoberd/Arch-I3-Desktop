@@ -1,0 +1,126 @@
+#!/bin/bash
+# Interactive i3wm Mod key configuration
+# Runs only on first boot to let user choose their preferred Mod key
+
+set -euo pipefail
+
+CONFIG_FLAG="$HOME/.config/i3/modkey-configured"
+I3_CONFIG="$HOME/.config/i3/config"
+
+# Check if already configured
+if [ -f "$CONFIG_FLAG" ]; then
+    exit 0
+fi
+
+# Clear screen and show banner
+clear
+cat << 'EOF'
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║            🎨 Welcome to Arch Linux i3wm Desktop! 🎨                ║
+║                                                                    ║
+║                      First-Time Setup                              ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+i3wm is a tiling window manager controlled by keyboard shortcuts.
+The main modifier key (Mod) is used for most commands.
+
+Let's configure your preferred Mod key!
+
+EOF
+
+echo "Available options:"
+echo ""
+echo "  [1] Alt key      (Mod1) - Common in Linux, conflicts less with apps"
+echo "  [2] Super key    (Mod4) - Windows/Command key, i3 default"
+echo ""
+echo -n "Enter your choice [1 or 2]: "
+
+# Read user choice
+while true; do
+    read -r choice
+    case $choice in
+        1)
+            MODKEY="Mod1"
+            MODKEY_NAME="Alt"
+            break
+            ;;
+        2)
+            MODKEY="Mod4"
+            MODKEY_NAME="Super (Windows/Command)"
+            break
+            ;;
+        *)
+            echo -n "Invalid choice. Please enter 1 or 2: "
+            ;;
+    esac
+done
+
+# Update i3 config
+echo ""
+echo "🔧 Configuring i3wm with $MODKEY_NAME as Mod key..."
+sed -i "s/set \$mod Mod[14]/set \$mod $MODKEY/" "$I3_CONFIG"
+
+# Create flag file
+touch "$CONFIG_FLAG"
+
+# Show success message and keybindings
+clear
+cat << EOF
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║                    ✅ Configuration Complete! ✅                    ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+Your Mod key is now set to: $MODKEY_NAME
+
+⌨️  ESSENTIAL KEYBINDINGS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Mod = $MODKEY_NAME key
+
+  🚀 LAUNCH APPLICATIONS:
+     Mod+Enter         Open terminal (Alacritty)
+     Mod+d             Application launcher (dmenu)
+     Mod+Shift+f       Open Firefox browser
+     Mod+Shift+t       Open file manager (Thunar)
+
+  🪟 WINDOW MANAGEMENT:
+     Mod+Shift+q       Close window
+     Mod+f             Toggle fullscreen
+     Mod+Shift+Space   Toggle floating mode
+
+  🎯 NAVIGATION:
+     Mod+h/j/k/l       Focus left/down/up/right (vim-style)
+     Mod+Left/Down/Up/Right  Focus with arrow keys
+
+  📐 LAYOUTS:
+     Mod+s             Stacking layout
+     Mod+w             Tabbed layout
+     Mod+e             Toggle split layout
+     Mod+b             Split horizontal
+     Mod+v             Split vertical
+
+  🏢 WORKSPACES:
+     Mod+1 to Mod+9    Switch to workspace 1-9
+     Mod+Shift+1-9     Move window to workspace
+
+  ⚙️  SYSTEM:
+     Mod+Shift+c       Reload i3 config
+     Mod+Shift+r       Restart i3
+     Mod+Shift+e       Exit i3
+     Mod+x             Lock screen
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 TIP: Press Mod+Shift+r now to restart i3 and apply your settings!
+
+📚 For more help, visit: https://i3wm.org/docs/userguide.html
+
+Press Enter to close this window and start using i3...
+EOF
+
+read -r
+exit 0
