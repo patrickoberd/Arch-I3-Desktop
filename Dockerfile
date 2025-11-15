@@ -63,6 +63,17 @@ RUN pacman -S --noconfirm \
     # Clean package cache to reduce image size
     rm -rf /var/cache/pacman/pkg/*
 
+# Generate locales for international support
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "de_DE.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "es_ES.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "it_IT.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen && \
+    echo "zh_CN.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen
+
 # Install noVNC for browser access
 RUN mkdir -p /opt/noVNC /opt/websockify && \
     curl -L https://github.com/novnc/noVNC/archive/v1.4.0.tar.gz | tar -xz -C /opt/noVNC --strip-components=1 && \
