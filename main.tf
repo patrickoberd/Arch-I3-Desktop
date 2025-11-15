@@ -9,25 +9,7 @@ terraform {
   }
 }
 
-# Workspace parameters
-variable "cpu" {
-  description = "CPU cores for workspace"
-  default     = "2"
-  type        = string
-}
-
-variable "memory" {
-  description = "Memory for workspace (GB)"
-  default     = "4"
-  type        = string
-}
-
-variable "disk_size" {
-  description = "Home directory size (GB)"
-  default     = "20"
-  type        = string
-}
-
+# Non-user-facing variables (not exposed as parameters)
 variable "image" {
   description = "Container image (automatically built via GitHub Actions)"
   default     = "ghcr.io/patrickoberd/arch-i3-desktop:latest"
@@ -40,126 +22,421 @@ variable "coder_url" {
   type        = string
 }
 
-# Desktop customization variables
-variable "desktop_resolution" {
-  description = "VNC desktop resolution"
-  default     = "1920x1080"
-  type        = string
-
-  validation {
-    condition = contains([
-      "1280x720", "1366x768", "1600x900", "1920x1080",
-      "2560x1440", "2560x1600", "3440x1440", "3840x2160"
-    ], var.desktop_resolution)
-    error_message = "Must be a standard resolution"
-  }
-}
-
-variable "i3_mod_key" {
-  description = "i3wm modifier key (Mod1=Alt, Mod4=Super/Windows)"
-  default     = "Mod4"
-  type        = string
-
-  validation {
-    condition     = contains(["Mod1", "Mod4"], var.i3_mod_key)
-    error_message = "Must be Mod1 (Alt) or Mod4 (Super)"
-  }
-}
-
-variable "terminal_font_size" {
-  description = "Alacritty terminal font size"
-  default     = 12
-  type        = number
-
-  validation {
-    condition     = var.terminal_font_size >= 8 && var.terminal_font_size <= 24
-    error_message = "Font size must be between 8 and 24"
-  }
-}
-
-variable "timezone" {
-  description = "Workspace timezone (TZ database format)"
-  default     = "UTC"
-  type        = string
-}
-
-variable "locale" {
-  description = "System locale"
-  default     = "en_US.UTF-8"
-  type        = string
-
-  validation {
-    condition = contains([
-      "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8",
-      "fr_FR.UTF-8", "es_ES.UTF-8", "it_IT.UTF-8",
-      "ja_JP.UTF-8", "zh_CN.UTF-8"
-    ], var.locale)
-    error_message = "Must be a supported locale"
-  }
-}
-
-variable "git_default_branch" {
-  description = "Git default branch name for new repositories"
-  default     = "main"
-  type        = string
-}
-
-variable "vscode_theme" {
-  description = "VS Code color theme"
-  default     = "Catppuccin Mocha"
-  type        = string
-
-  validation {
-    condition = contains([
-      "Catppuccin Mocha", "Catppuccin Latte", "Catppuccin Frappé", "Catppuccin Macchiato",
-      "Dark+ (default dark)", "Light+ (default light)", "Monokai", "Solarized Dark", "Solarized Light"
-    ], var.vscode_theme)
-    error_message = "Must be a supported VS Code theme"
-  }
-}
-
-variable "auto_start_firefox" {
-  description = "Auto-launch Firefox with VS Code on first boot"
-  default     = true
-  type        = bool
-}
-
-variable "default_shell" {
-  description = "Default shell (zsh or bash)"
-  default     = "zsh"
-  type        = string
-
-  validation {
-    condition     = contains(["zsh", "bash"], var.default_shell)
-    error_message = "Must be zsh or bash"
-  }
-}
-
-variable "ollama_temperature" {
-  description = "Default temperature for Ollama models in Continue.dev"
-  default     = 0.7
-  type        = number
-
-  validation {
-    condition     = var.ollama_temperature >= 0.0 && var.ollama_temperature <= 1.0
-    error_message = "Temperature must be between 0.0 and 1.0"
-  }
-}
-
-variable "ollama_context_window" {
-  description = "Context window size for Ollama models"
-  default     = 4096
-  type        = number
-
-  validation {
-    condition     = contains([2048, 4096, 8192, 16384], var.ollama_context_window)
-    error_message = "Must be 2048, 4096, 8192, or 16384"
-  }
-}
-
 # Coder data sources
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
+
+# ============================================================================
+# CODER PARAMETERS - User-configurable workspace options
+# ============================================================================
+
+# Infrastructure parameters (immutable - set at creation)
+data "coder_parameter" "cpu" {
+  name         = "cpu"
+  display_name = "CPU Cores"
+  description  = "Number of CPU cores allocated to the workspace"
+  type         = "string"
+  default      = "2"
+  icon         = "/icon/memory.svg"
+  mutable      = false
+  order        = 1
+
+  option {
+    name  = "2 Cores"
+    value = "2"
+  }
+  option {
+    name  = "4 Cores"
+    value = "4"
+  }
+  option {
+    name  = "6 Cores"
+    value = "6"
+  }
+  option {
+    name  = "8 Cores"
+    value = "8"
+  }
+}
+
+data "coder_parameter" "memory" {
+  name         = "memory"
+  display_name = "Memory (GB)"
+  description  = "Amount of RAM allocated to the workspace"
+  type         = "string"
+  default      = "4"
+  icon         = "/icon/memory.svg"
+  mutable      = false
+  order        = 2
+
+  option {
+    name  = "2 GB"
+    value = "2"
+  }
+  option {
+    name  = "4 GB"
+    value = "4"
+  }
+  option {
+    name  = "8 GB"
+    value = "8"
+  }
+  option {
+    name  = "16 GB"
+    value = "16"
+  }
+}
+
+data "coder_parameter" "disk_size" {
+  name         = "disk_size"
+  display_name = "Disk Size (GB)"
+  description  = "Size of persistent home directory storage"
+  type         = "number"
+  default      = "20"
+  icon         = "/emojis/1f4be.png"
+  mutable      = false
+  order        = 3
+
+  validation {
+    min = 10
+    max = 500
+  }
+}
+
+# Desktop customization parameters (mutable - can change after creation)
+data "coder_parameter" "desktop_resolution" {
+  name         = "desktop_resolution"
+  display_name = "Desktop Resolution"
+  description  = "VNC desktop screen resolution"
+  type         = "string"
+  default      = "1920x1080"
+  icon         = "/icon/desktop.svg"
+  mutable      = true
+  order        = 10
+
+  option {
+    name  = "1280x720 (HD)"
+    value = "1280x720"
+  }
+  option {
+    name  = "1366x768 (WXGA)"
+    value = "1366x768"
+  }
+  option {
+    name  = "1600x900 (HD+)"
+    value = "1600x900"
+  }
+  option {
+    name  = "1920x1080 (Full HD)"
+    value = "1920x1080"
+  }
+  option {
+    name  = "2560x1440 (QHD)"
+    value = "2560x1440"
+  }
+  option {
+    name  = "2560x1600 (WQXGA)"
+    value = "2560x1600"
+  }
+  option {
+    name  = "3440x1440 (UWQHD)"
+    value = "3440x1440"
+  }
+  option {
+    name  = "3840x2160 (4K)"
+    value = "3840x2160"
+  }
+}
+
+data "coder_parameter" "i3_mod_key" {
+  name         = "i3_mod_key"
+  display_name = "i3wm Modifier Key"
+  description  = "Primary modifier key for i3 window manager shortcuts"
+  type         = "string"
+  default      = "Mod4"
+  icon         = "/icon/keyboard.svg"
+  mutable      = true
+  order        = 11
+
+  option {
+    name  = "Super/Windows Key (Mod4)"
+    value = "Mod4"
+  }
+  option {
+    name  = "Alt Key (Mod1)"
+    value = "Mod1"
+  }
+}
+
+data "coder_parameter" "terminal_font_size" {
+  name         = "terminal_font_size"
+  display_name = "Terminal Font Size"
+  description  = "Font size for Alacritty terminal (8-24 points)"
+  type         = "number"
+  default      = "12"
+  icon         = "/icon/terminal.svg"
+  mutable      = true
+  order        = 12
+
+  validation {
+    min = 8
+    max = 24
+  }
+}
+
+data "coder_parameter" "vscode_theme" {
+  name         = "vscode_theme"
+  display_name = "VS Code Theme"
+  description  = "Color theme for VS Code editor"
+  type         = "string"
+  default      = "Catppuccin Mocha"
+  icon         = "/icon/code.svg"
+  mutable      = true
+  order        = 13
+
+  option {
+    name  = "Catppuccin Mocha (Dark)"
+    value = "Catppuccin Mocha"
+  }
+  option {
+    name  = "Catppuccin Latte (Light)"
+    value = "Catppuccin Latte"
+  }
+  option {
+    name  = "Catppuccin Frappé (Dark)"
+    value = "Catppuccin Frappé"
+  }
+  option {
+    name  = "Catppuccin Macchiato (Dark)"
+    value = "Catppuccin Macchiato"
+  }
+  option {
+    name  = "Dark+ (VS Code Default Dark)"
+    value = "Dark+ (default dark)"
+  }
+  option {
+    name  = "Light+ (VS Code Default Light)"
+    value = "Light+ (default light)"
+  }
+  option {
+    name  = "Monokai"
+    value = "Monokai"
+  }
+  option {
+    name  = "Solarized Dark"
+    value = "Solarized Dark"
+  }
+  option {
+    name  = "Solarized Light"
+    value = "Solarized Light"
+  }
+}
+
+# System settings parameters (mutable)
+data "coder_parameter" "timezone" {
+  name         = "timezone"
+  display_name = "Timezone"
+  description  = "System timezone (TZ database format)"
+  type         = "string"
+  default      = "UTC"
+  icon         = "/icon/clock.svg"
+  mutable      = true
+  order        = 20
+
+  option {
+    name  = "UTC"
+    value = "UTC"
+  }
+  option {
+    name  = "US Eastern (America/New_York)"
+    value = "America/New_York"
+  }
+  option {
+    name  = "US Central (America/Chicago)"
+    value = "America/Chicago"
+  }
+  option {
+    name  = "US Mountain (America/Denver)"
+    value = "America/Denver"
+  }
+  option {
+    name  = "US Pacific (America/Los_Angeles)"
+    value = "America/Los_Angeles"
+  }
+  option {
+    name  = "Europe/London"
+    value = "Europe/London"
+  }
+  option {
+    name  = "Europe/Paris"
+    value = "Europe/Paris"
+  }
+  option {
+    name  = "Europe/Berlin"
+    value = "Europe/Berlin"
+  }
+  option {
+    name  = "Europe/Vienna"
+    value = "Europe/Vienna"
+  }
+  option {
+    name  = "Asia/Tokyo"
+    value = "Asia/Tokyo"
+  }
+  option {
+    name  = "Asia/Shanghai"
+    value = "Asia/Shanghai"
+  }
+  option {
+    name  = "Australia/Sydney"
+    value = "Australia/Sydney"
+  }
+}
+
+data "coder_parameter" "locale" {
+  name         = "locale"
+  display_name = "System Locale"
+  description  = "Language and regional settings"
+  type         = "string"
+  default      = "en_US.UTF-8"
+  icon         = "/icon/globe.svg"
+  mutable      = true
+  order        = 21
+
+  option {
+    name  = "English (US)"
+    value = "en_US.UTF-8"
+  }
+  option {
+    name  = "English (GB)"
+    value = "en_GB.UTF-8"
+  }
+  option {
+    name  = "German"
+    value = "de_DE.UTF-8"
+  }
+  option {
+    name  = "French"
+    value = "fr_FR.UTF-8"
+  }
+  option {
+    name  = "Spanish"
+    value = "es_ES.UTF-8"
+  }
+  option {
+    name  = "Italian"
+    value = "it_IT.UTF-8"
+  }
+  option {
+    name  = "Japanese"
+    value = "ja_JP.UTF-8"
+  }
+  option {
+    name  = "Chinese (Simplified)"
+    value = "zh_CN.UTF-8"
+  }
+}
+
+data "coder_parameter" "default_shell" {
+  name         = "default_shell"
+  display_name = "Default Shell"
+  description  = "Default terminal shell (zsh or bash)"
+  type         = "string"
+  default      = "zsh"
+  icon         = "/icon/terminal.svg"
+  mutable      = true
+  order        = 22
+
+  option {
+    name  = "Zsh (with oh-my-zsh)"
+    value = "zsh"
+  }
+  option {
+    name  = "Bash"
+    value = "bash"
+  }
+}
+
+# Development settings parameters (mutable)
+data "coder_parameter" "git_default_branch" {
+  name         = "git_default_branch"
+  display_name = "Git Default Branch"
+  description  = "Default branch name for new Git repositories"
+  type         = "string"
+  default      = "main"
+  icon         = "/icon/git.svg"
+  mutable      = true
+  order        = 30
+
+  option {
+    name  = "main"
+    value = "main"
+  }
+  option {
+    name  = "master"
+    value = "master"
+  }
+  option {
+    name  = "develop"
+    value = "develop"
+  }
+}
+
+data "coder_parameter" "auto_start_firefox" {
+  name         = "auto_start_firefox"
+  display_name = "Auto-start Firefox"
+  description  = "Automatically launch Firefox with VS Code on first boot"
+  type         = "bool"
+  default      = "true"
+  icon         = "/icon/firefox.svg"
+  mutable      = true
+  order        = 31
+}
+
+# AI/Ollama settings parameters (mutable)
+data "coder_parameter" "ollama_temperature" {
+  name         = "ollama_temperature"
+  display_name = "Ollama Temperature"
+  description  = "Default temperature for Ollama AI models (0.0=deterministic, 1.0=creative)"
+  type         = "number"
+  default      = "0.7"
+  icon         = "/icon/ai.svg"
+  mutable      = true
+  order        = 40
+
+  validation {
+    min = 0
+    max = 1
+  }
+}
+
+data "coder_parameter" "ollama_context_window" {
+  name         = "ollama_context_window"
+  display_name = "Ollama Context Window"
+  description  = "Context window size for Ollama models (larger = more memory)"
+  type         = "string"
+  default      = "4096"
+  icon         = "/icon/ai.svg"
+  mutable      = true
+  order        = 41
+
+  option {
+    name  = "2048 tokens (Fast)"
+    value = "2048"
+  }
+  option {
+    name  = "4096 tokens (Balanced)"
+    value = "4096"
+  }
+  option {
+    name  = "8192 tokens (Large)"
+    value = "8192"
+  }
+  option {
+    name  = "16384 tokens (Maximum)"
+    value = "16384"
+  }
+}
 
 # Locals for dynamic values
 locals {
@@ -352,7 +629,7 @@ resource "kubernetes_persistent_volume_claim" "home" {
 
     resources {
       requests = {
-        storage = "${var.disk_size}Gi"
+        storage = "${data.coder_parameter.disk_size.value}Gi"
       }
     }
   }
@@ -407,73 +684,73 @@ resource "kubernetes_pod" "main" {
       # Customization environment variables
       env {
         name  = "DESKTOP_RESOLUTION"
-        value = var.desktop_resolution
+        value = data.coder_parameter.desktop_resolution.value
       }
 
       env {
         name  = "I3_MOD_KEY"
-        value = var.i3_mod_key
+        value = data.coder_parameter.i3_mod_key.value
       }
 
       env {
         name  = "TERMINAL_FONT_SIZE"
-        value = tostring(var.terminal_font_size)
+        value = tostring(data.coder_parameter.terminal_font_size.value)
       }
 
       env {
         name  = "TZ"
-        value = var.timezone
+        value = data.coder_parameter.timezone.value
       }
 
       env {
         name  = "LANG"
-        value = var.locale
+        value = data.coder_parameter.locale.value
       }
 
       env {
         name  = "LC_ALL"
-        value = var.locale
+        value = data.coder_parameter.locale.value
       }
 
       env {
         name  = "GIT_DEFAULT_BRANCH"
-        value = var.git_default_branch
+        value = data.coder_parameter.git_default_branch.value
       }
 
       env {
         name  = "VSCODE_THEME"
-        value = var.vscode_theme
+        value = data.coder_parameter.vscode_theme.value
       }
 
       env {
         name  = "AUTO_START_FIREFOX"
-        value = tostring(var.auto_start_firefox)
+        value = tostring(data.coder_parameter.auto_start_firefox.value)
       }
 
       env {
         name  = "DEFAULT_SHELL"
-        value = var.default_shell
+        value = data.coder_parameter.default_shell.value
       }
 
       env {
         name  = "OLLAMA_TEMPERATURE"
-        value = tostring(var.ollama_temperature)
+        value = tostring(data.coder_parameter.ollama_temperature.value)
       }
 
       env {
         name  = "OLLAMA_CONTEXT_WINDOW"
-        value = tostring(var.ollama_context_window)
+        value = data.coder_parameter.ollama_context_window.value
       }
 
       # Resources
       resources {
         requests = {
-          cpu    = var.cpu
-          memory = "${var.memory}Gi"
+          cpu    = data.coder_parameter.cpu.value
+          memory = "${data.coder_parameter.memory.value}Gi"
         }
         limits = {
-          cpu    = "${parseint(var.cpu, 10) + 1}"
-          memory = "${parseint(var.memory, 10) + 2}Gi"
+          cpu    = "${parseint(data.coder_parameter.cpu.value, 10) + 1}"
+          memory = "${parseint(data.coder_parameter.memory.value, 10) + 2}Gi"
         }
       }
 
@@ -564,20 +841,20 @@ output "access_instructions" {
        - Launchers: dmenu, rofi
 
     Resources:
-       - CPU: ${var.cpu} cores
-       - Memory: ${var.memory}GB
-       - Storage: ${var.disk_size}GB
+       - CPU: ${data.coder_parameter.cpu.value} cores
+       - Memory: ${data.coder_parameter.memory.value}GB
+       - Storage: ${data.coder_parameter.disk_size.value}GB
 
     Workspace Customizations:
-       - Desktop Resolution: ${var.desktop_resolution}
-       - i3 Mod Key: ${var.i3_mod_key == "Mod4" ? "Super/Windows" : "Alt"}
-       - Terminal Font: ${var.terminal_font_size}pt
-       - Timezone: ${var.timezone}
-       - Locale: ${var.locale}
-       - VS Code Theme: ${var.vscode_theme}
-       - Default Shell: ${var.default_shell}
-       - Git Default Branch: ${var.git_default_branch}
+       - Desktop Resolution: ${data.coder_parameter.desktop_resolution.value}
+       - i3 Mod Key: ${data.coder_parameter.i3_mod_key.value == "Mod4" ? "Super/Windows" : "Alt"}
+       - Terminal Font: ${data.coder_parameter.terminal_font_size.value}pt
+       - Timezone: ${data.coder_parameter.timezone.value}
+       - Locale: ${data.coder_parameter.locale.value}
+       - VS Code Theme: ${data.coder_parameter.vscode_theme.value}
+       - Default Shell: ${data.coder_parameter.default_shell.value}
+       - Git Default Branch: ${data.coder_parameter.git_default_branch.value}
 
-    Tip: The Mod key is ${var.i3_mod_key == "Mod4" ? "the Windows/Super key" : "the Alt key"}
+    Tip: The Mod key is ${data.coder_parameter.i3_mod_key.value == "Mod4" ? "the Windows/Super key" : "the Alt key"}
   EOT
 }
