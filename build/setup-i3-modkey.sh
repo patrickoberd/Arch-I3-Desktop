@@ -137,9 +137,13 @@ echo "Restarting i3 to apply changes..."
 sleep 1
 i3-msg restart
 
-# Wait for i3 to restart, then open Firefox with VS Code
+# Wait for i3 to restart, then open Firefox with VS Code (if enabled)
 sleep 2
-echo "Opening VS Code in Firefox..."
-firefox http://localhost:8080 &
+if [ "${AUTO_START_FIREFOX:-true}" = "true" ]; then
+    echo "Opening VS Code in Firefox..."
+    firefox http://localhost:8080 &
+else
+    echo "Skipping Firefox auto-start (disabled in workspace settings)"
+fi
 
 exit 0

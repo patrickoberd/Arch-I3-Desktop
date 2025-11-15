@@ -42,6 +42,71 @@ if [ ! -f "$HOME/.workspace-initialized" ]; then
     code-server --install-extension Continue.continue --force 2>/dev/null || \
         echo "Note: Continue extension will be available after code-server restart"
 
+    # Apply user customizations from environment variables
+    echo "Applying workspace customizations..."
+
+    # Apply i3 mod key preference
+    if [ -n "${I3_MOD_KEY:-}" ] && [ -f ~/.config/i3/config ]; then
+        echo "Setting i3 mod key to ${I3_MOD_KEY}..."
+        sed -i "s/^set \$mod Mod[14]/set \$mod ${I3_MOD_KEY}/" ~/.config/i3/config
+    fi
+
+    # Apply Alacritty font size
+    if [ -n "${TERMINAL_FONT_SIZE:-}" ] && [ -f ~/.config/alacritty/alacritty.toml ]; then
+        echo "Setting terminal font size to ${TERMINAL_FONT_SIZE}..."
+        sed -i "s/^size = .*/size = ${TERMINAL_FONT_SIZE}.0/" ~/.config/alacritty/alacritty.toml
+    fi
+
+    # Set default shell
+    if [ -n "${DEFAULT_SHELL:-}" ]; then
+        echo "Setting default shell to ${DEFAULT_SHELL}..."
+        # Change shell for coder user
+        if command -v chsh >/dev/null 2>&1; then
+            chsh -s "/bin/${DEFAULT_SHELL}" 2>/dev/null || echo "Note: Shell will be ${DEFAULT_SHELL} on next login"
+        fi
+    fi
+
+    # Configure git default branch
+    if [ -n "${GIT_DEFAULT_BRANCH:-}" ]; then
+        echo "Setting git default branch to ${GIT_DEFAULT_BRANCH}..."
+        git config --global init.defaultBranch "${GIT_DEFAULT_BRANCH}"
+    fi
+
+    # Configure VS Code theme (will be applied when code-server starts)
+    if [ -n "${VSCODE_THEME:-}" ]; then
+        echo "Configuring VS Code theme: ${VSCODE_THEME}..."
+        mkdir -p ~/.local/share/code-server/User
+        if [ -f ~/.local/share/code-server/User/settings.json ]; then
+            # Update existing settings
+            jq --arg theme "${VSCODE_THEME}" '.["workbench.colorTheme"] = $theme' \
+                ~/.local/share/code-server/User/settings.json > /tmp/settings.json.tmp && \
+                mv /tmp/settings.json.tmp ~/.local/share/code-server/User/settings.json
+        else
+            # Create new settings
+            cat > ~/.local/share/code-server/User/settings.json << EOF
+{
+  "workbench.colorTheme": "${VSCODE_THEME}"
+}
+EOF
+        fi
+    fi
+
+    # Update Continue.dev Ollama settings
+    if [ -f ~/.continue/config.json ]; then
+        if [ -n "${OLLAMA_TEMPERATURE:-}" ] || [ -n "${OLLAMA_CONTEXT_WINDOW:-}" ]; then
+            echo "Configuring Continue.dev Ollama settings..."
+            TEMP_FILE=$(mktemp)
+            jq ".models |= map(
+                . + {
+                    \"temperature\": ${OLLAMA_TEMPERATURE:-0.7},
+                    \"contextLength\": ${OLLAMA_CONTEXT_WINDOW:-4096}
+                }
+            )" ~/.continue/config.json > "$TEMP_FILE" && \
+                mv "$TEMP_FILE" ~/.continue/config.json
+        fi
+    fi
+
+    echo "Customizations applied successfully"
     touch "$HOME/.workspace-initialized"
     echo "Configuration installed"
 fi
