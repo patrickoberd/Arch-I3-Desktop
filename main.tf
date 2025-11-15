@@ -667,6 +667,13 @@ resource "kubernetes_pod" "main" {
     }
   }
 
+  # Terraform timeouts for long-running operations
+  # Allows up to 45 minutes for initial image pull (1.5GB from ghcr.io)
+  timeouts {
+    create = "45m"
+    delete = "5m"
+  }
+
   spec {
     # Security context
     security_context {
@@ -684,8 +691,9 @@ resource "kubernetes_pod" "main" {
       name  = "desktop"
       image = var.image
 
-      # Image pull policy
-      image_pull_policy = "Always"
+      # Image pull policy - IfNotPresent caches image on node
+      # First pull: ~30 minutes, subsequent starts: <1 minute
+      image_pull_policy = "IfNotPresent"
 
       # Environment variables
       env {
@@ -777,15 +785,17 @@ resource "kubernetes_pod" "main" {
         mount_path = "/home/coder"
       }
 
-      # Startup probe
+      # Startup probe - increased to handle long image pull
+      # Max startup time: 10 + (240 × 10) = 2410 seconds = ~40 minutes
+      # Covers: 30min image pull + 10min container start buffer
       startup_probe {
         tcp_socket {
           port = 6080
         }
         initial_delay_seconds = 10
-        period_seconds        = 5
-        timeout_seconds       = 3
-        failure_threshold     = 30
+        period_seconds        = 10  # Check every 10 seconds (was 5)
+        timeout_seconds       = 5   # Allow 5 seconds per probe (was 3)
+        failure_threshold     = 240 # 240 failures = 40 minutes (was 30 = 2.5min)
       }
 
       # Liveness probe
