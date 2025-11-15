@@ -33,29 +33,21 @@ data "coder_workspace_owner" "me" {}
 # Infrastructure parameters (immutable - set at creation)
 data "coder_parameter" "cpu" {
   name         = "cpu"
-  display_name = "CPU Cores"
-  description  = "Number of CPU cores allocated to the workspace"
+  display_name = "CPU Limit (Burst)"
+  description  = "Maximum CPU cores for builds and compilation (guaranteed minimum: 2 cores)"
   type         = "string"
-  default      = "2"
+  default      = "4"
   icon         = "/icon/memory.svg"
   mutable      = false
   order        = 1
 
   option {
-    name  = "2 Cores"
+    name  = "2 Cores (Minimum)"
     value = "2"
   }
   option {
-    name  = "4 Cores"
+    name  = "4 Cores (Full Node)"
     value = "4"
-  }
-  option {
-    name  = "6 Cores"
-    value = "6"
-  }
-  option {
-    name  = "8 Cores"
-    value = "8"
   }
 }
 
@@ -770,11 +762,11 @@ resource "kubernetes_pod" "main" {
       # Resources
       resources {
         requests = {
-          cpu    = data.coder_parameter.cpu.value
+          cpu    = "2" # Fixed at 2 cores for scheduling - always fits on 4 vCPU nodes
           memory = "${data.coder_parameter.memory.value}Gi"
         }
         limits = {
-          cpu    = "${parseint(data.coder_parameter.cpu.value, 10) + 1}"
+          cpu    = data.coder_parameter.cpu.value # User selection - allows bursting
           memory = "${parseint(data.coder_parameter.memory.value, 10) + 2}Gi"
         }
       }
@@ -866,8 +858,9 @@ output "access_instructions" {
        - Launchers: dmenu, rofi
 
     Resources:
-       - CPU: ${data.coder_parameter.cpu.value} cores
-       - Memory: ${data.coder_parameter.memory.value}GB
+       - CPU Guaranteed: 2 cores (always available)
+       - CPU Limit (Burst): ${data.coder_parameter.cpu.value} cores (for builds/compilation)
+       - Memory: ${data.coder_parameter.memory.value}GB (limit: ${parseint(data.coder_parameter.memory.value, 10) + 2}GB)
        - Storage: ${data.coder_parameter.disk_size.value}GB
 
     Workspace Customizations:
