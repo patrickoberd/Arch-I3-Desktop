@@ -398,15 +398,40 @@ data "coder_parameter" "ollama_temperature" {
   name         = "ollama_temperature"
   display_name = "Ollama Temperature"
   description  = "Default temperature for Ollama AI models (0.0=deterministic, 1.0=creative)"
-  type         = "number"
-  default      = 0.7
+  type         = "string"
+  default      = "0.7"
   icon         = "/icon/ai.svg"
   mutable      = true
   order        = 40
 
-  validation {
-    min = 0
-    max = 1
+  option {
+    name  = "Deterministic (0.0)"
+    value = "0.0"
+  }
+
+  option {
+    name  = "Low Creativity (0.3)"
+    value = "0.3"
+  }
+
+  option {
+    name  = "Balanced (0.5)"
+    value = "0.5"
+  }
+
+  option {
+    name  = "Creative (0.7)"
+    value = "0.7"
+  }
+
+  option {
+    name  = "Very Creative (0.9)"
+    value = "0.9"
+  }
+
+  option {
+    name  = "Maximum Creativity (1.0)"
+    value = "1.0"
   }
 }
 
@@ -734,7 +759,7 @@ resource "kubernetes_pod" "main" {
 
       env {
         name  = "OLLAMA_TEMPERATURE"
-        value = tostring(data.coder_parameter.ollama_temperature.value)
+        value = data.coder_parameter.ollama_temperature.value
       }
 
       env {
