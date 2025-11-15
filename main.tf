@@ -26,6 +26,14 @@ variable "coder_url" {
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
+# Platform configuration (Ollama endpoints from ConfigMap)
+data "kubernetes_config_map_v1" "platform_config" {
+  metadata {
+    name      = "ollama-endpoints"
+    namespace = "coder"
+  }
+}
+
 # ============================================================================
 # CODER PARAMETERS - User-configurable workspace options
 # ============================================================================
@@ -475,19 +483,19 @@ resource "coder_agent" "main" {
       "title": "CodeLlama 7B (Fast)",
       "provider": "ollama",
       "model": "codellama:7b",
-      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+      "apiBase": "${data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL}"
     },
     {
       "title": "Qwen2.5 Coder 7B (Smart)",
       "provider": "ollama",
       "model": "qwen2.5-coder:7b",
-      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+      "apiBase": "${data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL}"
     },
     {
       "title": "DeepSeek Coder V2 16B (Powerful)",
       "provider": "ollama",
       "model": "deepseek-coder-v2:16b",
-      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+      "apiBase": "${data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL}"
     }
   ],
   "tabAutocompleteModel": {
@@ -544,7 +552,7 @@ CONTINUE_CONFIG
     GIT_AUTHOR_EMAIL    = data.coder_workspace_owner.me.email
     GIT_COMMITTER_NAME  = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
     GIT_COMMITTER_EMAIL = data.coder_workspace_owner.me.email
-    OLLAMA_HOST         = "http://ollama.ollama.svc.cluster.local:11434"
+    OLLAMA_HOST         = data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL
   }
 }
 
