@@ -92,7 +92,7 @@ data "coder_parameter" "disk_size" {
   display_name = "Disk Size (GB)"
   description  = "Size of persistent home directory storage"
   type         = "number"
-  default      = "20"
+  default      = 20
   icon         = "/emojis/1f4be.png"
   mutable      = false
   order        = 3
@@ -173,7 +173,7 @@ data "coder_parameter" "terminal_font_size" {
   display_name = "Terminal Font Size"
   description  = "Font size for Alacritty terminal (8-24 points)"
   type         = "number"
-  default      = "12"
+  default      = 12
   icon         = "/icon/terminal.svg"
   mutable      = true
   order        = 12
@@ -399,7 +399,7 @@ data "coder_parameter" "ollama_temperature" {
   display_name = "Ollama Temperature"
   description  = "Default temperature for Ollama AI models (0.0=deterministic, 1.0=creative)"
   type         = "number"
-  default      = "0.7"
+  default      = 0.7
   icon         = "/icon/ai.svg"
   mutable      = true
   order        = 40
