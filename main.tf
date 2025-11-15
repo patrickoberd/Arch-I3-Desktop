@@ -671,9 +671,9 @@ resource "kubernetes_pod" "main" {
       name  = "desktop"
       image = var.image
 
-      # Image pull policy - IfNotPresent caches image on node
-      # First pull: ~30 minutes, subsequent starts: <1 minute
-      image_pull_policy = "IfNotPresent"
+      # Image pull policy - Always checks registry for latest digest
+      # Ensures workspace always uses newest :latest tag after builds
+      image_pull_policy = "Always"
 
       # Environment variables
       env {
