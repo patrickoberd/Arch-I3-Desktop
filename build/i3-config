@@ -252,7 +252,7 @@ bindsym $mod+F12 exec --no-startup-id /usr/local/bin/resolution-menu.sh
 # ===== QUALITY OF LIFE SHORTCUTS =====
 
 # Terminal with tmux
-bindsym $mod+Shift+t exec alacritty -e tmux attach || alacritty -e tmux new
+#bindsym $mod+Shift+t exec alacritty -e tmux attach || alacritty -e tmux new
 
 # File upload/download server toggle
 bindsym $mod+u exec --no-startup-id /usr/local/bin/file-server.sh toggle

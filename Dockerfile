@@ -64,15 +64,15 @@ RUN pacman -S --noconfirm \
     rm -rf /var/cache/pacman/pkg/*
 
 # Generate locales for international support
-RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+# Remove NoExtract rules that block locale files, then reinstall glibc
+RUN sed -i '/NoExtract.*i18n/d' /etc/pacman.conf && \
+    sed -i '/NoExtract.*locale/d' /etc/pacman.conf && \
+    pacman -Sy --noconfirm glibc && \
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen && \
     echo "de_DE.UTF-8 UTF-8" >> /etc/locale.gen && \
-    echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen && \
-    echo "es_ES.UTF-8 UTF-8" >> /etc/locale.gen && \
-    echo "it_IT.UTF-8 UTF-8" >> /etc/locale.gen && \
-    echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen && \
-    echo "zh_CN.UTF-8 UTF-8" >> /etc/locale.gen && \
-    locale-gen
+    locale-gen && \
+    rm -rf /var/cache/pacman/pkg/*
 
 # Install noVNC for browser access
 RUN mkdir -p /opt/noVNC /opt/websockify && \

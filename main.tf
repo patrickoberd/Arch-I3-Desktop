@@ -307,26 +307,6 @@ data "coder_parameter" "locale" {
     name  = "German"
     value = "de_DE.UTF-8"
   }
-  option {
-    name  = "French"
-    value = "fr_FR.UTF-8"
-  }
-  option {
-    name  = "Spanish"
-    value = "es_ES.UTF-8"
-  }
-  option {
-    name  = "Italian"
-    value = "it_IT.UTF-8"
-  }
-  option {
-    name  = "Japanese"
-    value = "ja_JP.UTF-8"
-  }
-  option {
-    name  = "Chinese (Simplified)"
-    value = "zh_CN.UTF-8"
-  }
 }
 
 data "coder_parameter" "default_shell" {
