@@ -163,7 +163,7 @@ data "coder_workspace_owner" "me" {}
 
 # Locals for dynamic values
 locals {
-  namespace = "coder-${data.coder_workspace_owner.me.name}"
+  namespace = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.me.name}"
 }
 
 # Coder agent for authentication and connection
@@ -319,18 +319,18 @@ resource "coder_app" "terminal" {
   command      = "zsh"
 }
 
-# Kubernetes namespace for user's workspaces
+# Kubernetes namespace for workspace
 resource "kubernetes_namespace" "workspace" {
   metadata {
     name = local.namespace
     labels = {
-      "coder.owner" = data.coder_workspace_owner.me.name
+      "coder.owner"     = data.coder_workspace_owner.me.name
+      "coder.workspace" = data.coder_workspace.me.name
     }
   }
 
   lifecycle {
-    prevent_destroy = true
-    ignore_changes  = [metadata[0].annotations]
+    ignore_changes = [metadata[0].annotations]
   }
 }
 
