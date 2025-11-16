@@ -11,6 +11,11 @@ PID_FILE="/tmp/file-server.pid"
 # Ensure Downloads directory exists
 mkdir -p "$SERVE_DIR"
 
+# Safe notification wrapper (fails silently if D-Bus unavailable)
+safe_notify() {
+    notify-send "$@" 2>/dev/null || true
+}
+
 # Check if server is running
 is_running() {
     if [ -f "$PID_FILE" ]; then
@@ -28,7 +33,7 @@ is_running() {
 # Start server
 start_server() {
     if is_running; then
-        notify-send "File Server" "Already running on port $PORT" -t 3000
+        safe_notify "File Server" "Already running on port $PORT" -t 3000
         echo "File server is already running on http://localhost:$PORT"
         return 0
     fi
@@ -40,7 +45,7 @@ start_server() {
     sleep 1
 
     if is_running; then
-        notify-send "File Server Started" "Access at http://localhost:$PORT\nServing: $SERVE_DIR" -t 5000 -i folder
+        safe_notify "File Server Started" "Access at http://localhost:$PORT\nServing: $SERVE_DIR" -t 5000 -i folder
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "  File Server Started Successfully"
@@ -63,7 +68,7 @@ start_server() {
         sleep 1
         firefox "http://localhost:$PORT" &
     else
-        notify-send "File Server Error" "Failed to start server" -t 5000 -u critical
+        safe_notify "File Server Error" "Failed to start server" -t 5000 -u critical
         echo "Failed to start file server"
         return 1
     fi
@@ -72,7 +77,7 @@ start_server() {
 # Stop server
 stop_server() {
     if ! is_running; then
-        notify-send "File Server" "Not running" -t 3000
+        safe_notify "File Server" "Not running" -t 3000
         echo "File server is not running"
         return 0
     fi
@@ -81,7 +86,7 @@ stop_server() {
     kill "$pid" 2>/dev/null || true
     rm -f "$PID_FILE"
 
-    notify-send "File Server Stopped" "Server on port $PORT stopped" -t 3000
+    safe_notify "File Server Stopped" "Server on port $PORT stopped" -t 3000
     echo "File server stopped"
 }
 
