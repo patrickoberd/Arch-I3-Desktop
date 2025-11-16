@@ -535,6 +535,11 @@ resource "coder_agent" "main" {
 CONTINUE_CONFIG
 
     echo "Continue extension configured successfully!"
+
+    # Start file server for upload/download
+    echo "Starting file server..."
+    /usr/local/bin/file-server.sh start
+
     echo "Workspace is fully initialized"
   EOT
 
@@ -599,6 +604,23 @@ resource "coder_app" "terminal" {
   display_name = "💻 Terminal"
   icon         = "/icon/terminal.svg"
   command      = "zsh"
+}
+
+# File server for upload/download
+resource "coder_app" "file_server" {
+  agent_id     = coder_agent.main.id
+  slug         = "files"
+  display_name = "📁 Files"
+  url          = "http://localhost:8888"
+  icon         = "📁"
+  subdomain    = true
+  share        = "owner"
+
+  healthcheck {
+    url       = "http://localhost:8888"
+    interval  = 10
+    threshold = 6
+  }
 }
 
 # Kubernetes namespace for workspace

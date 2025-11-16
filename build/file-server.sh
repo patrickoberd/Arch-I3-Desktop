@@ -33,9 +33,8 @@ start_server() {
         return 0
     fi
 
-    # Start Python HTTP server in background
-    cd "$SERVE_DIR"
-    python -m http.server $PORT > /tmp/file-server.log 2>&1 &
+    # Start miniserve file server in background (with upload support)
+    miniserve --upload-files "$SERVE_DIR" -p $PORT > /tmp/file-server.log 2>&1 &
     echo $! > "$PID_FILE"
 
     sleep 1

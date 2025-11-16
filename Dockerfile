@@ -86,6 +86,11 @@ RUN CODE_SERVER_VERSION=4.96.2 && \
     mv "/tmp/code-server-${CODE_SERVER_VERSION}-linux-amd64" /usr/local/lib/code-server && \
     ln -s /usr/local/lib/code-server/bin/code-server /usr/local/bin/code-server
 
+# Install miniserve (modern file server with upload support)
+RUN MINISERVE_VERSION=0.28.0 && \
+    curl -fsSL "https://github.com/svenstaro/miniserve/releases/download/v${MINISERVE_VERSION}/miniserve-${MINISERVE_VERSION}-x86_64-unknown-linux-musl" -o /usr/local/bin/miniserve && \
+    chmod +x /usr/local/bin/miniserve
+
 # Create user
 RUN useradd -m -s /bin/zsh -G wheel coder && \
     echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -195,7 +200,7 @@ ENV SHELL=/bin/zsh
 WORKDIR /home/coder
 USER coder
 
-# Expose VNC, noVNC, and code-server ports
-EXPOSE 5901 6080 8080
+# Expose VNC, noVNC, code-server, and file server ports
+EXPOSE 5901 6080 8080 8888
 
 CMD ["/usr/local/bin/start-vnc.sh"]
