@@ -39,7 +39,7 @@ start_server() {
     fi
 
     # Start miniserve file server in background (with upload support)
-    miniserve --upload-files "$SERVE_DIR" -p $PORT > /tmp/file-server.log 2>&1 &
+    miniserve -p $PORT --upload-files "$SERVE_DIR" > /tmp/file-server.log 2>&1 &
     echo $! > "$PID_FILE"
 
     sleep 1
