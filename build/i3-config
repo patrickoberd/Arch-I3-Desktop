@@ -68,9 +68,6 @@ bindsym $mod+e layout toggle split
 # Toggle tiling / floating
 bindsym $mod+Shift+space floating toggle
 
-# Rofi launcher (primary - most intuitive binding)
-bindsym $mod+space exec --no-startup-id rofi -show drun -theme Arc-Dark
-
 # Focus the parent container
 bindsym $mod+a focus parent
 
@@ -257,8 +254,8 @@ bindsym $mod+F12 exec --no-startup-id /usr/local/bin/resolution-menu.sh
 # File upload/download server toggle
 bindsym $mod+u exec --no-startup-id /usr/local/bin/file-server.sh toggle
 
-# Quick actions menu (favorites/shortcuts)
-bindsym $mod+z exec --no-startup-id /usr/local/bin/quick-actions.sh
+# Quick actions menu (favorites/shortcuts) - PRIME POSITION
+bindsym $mod+space exec --no-startup-id /usr/local/bin/quick-actions.sh
 
 # Clipboard manager (clipboard history)
 bindsym $mod+c exec --no-startup-id clipmenu -p "Clipboard:" -theme Arc-Dark
@@ -282,5 +279,5 @@ exec --no-startup-id dunst
 exec --no-startup-id clipmenud
 # Scratchpad terminal (already defined in window rules above)
 
-# First-boot setup: Choose Mod key interactively
-exec --no-startup-id bash -c 'if [ ! -f ~/.config/i3/modkey-configured ]; then alacritty -e bash /usr/local/bin/setup-i3-modkey.sh; else alacritty; fi'
+# Launch terminal on startup (Mod key already configured via Coder parameter)
+exec alacritty

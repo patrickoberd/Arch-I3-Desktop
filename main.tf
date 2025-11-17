@@ -795,12 +795,15 @@ output "access_instructions" {
        Click the "Terminal" app or use SSH
 
     i3wm Quick Start:
+       - Mod+Space:    Quick Actions Menu (apps, screenshots, file server, tools)
        - Mod+Enter:    Open terminal (alacritty)
-       - Mod+d:        Application launcher
+       - Mod+d:        Application launcher (dmenu)
+       - Mod+p:        Application launcher (rofi)
        - Mod+Shift+f:  Open Firefox
        - Mod+1-9:      Switch workspaces
        - Mod+Shift+q:  Close window
        - Mod+f:        Fullscreen
+       - Mod+u:        Toggle file upload/download server
 
     Installed tools:
        - Languages: Python, Rust, Go, Node.js
