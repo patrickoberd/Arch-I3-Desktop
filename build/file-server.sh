@@ -64,9 +64,11 @@ start_server() {
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
 
-        # Open in Firefox after a short delay
-        sleep 1
-        firefox "http://localhost:$PORT" &
+        # Open in Firefox if running interactively (not during auto-start)
+        if [ -n "${DISPLAY:-}" ] && [ -t 1 ]; then
+            sleep 1
+            firefox "http://localhost:$PORT" 2>/dev/null &
+        fi
     else
         safe_notify "File Server Error" "Failed to start server" -t 5000 -u critical
         echo "Failed to start file server"

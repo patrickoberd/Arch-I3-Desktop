@@ -26,14 +26,6 @@ variable "coder_url" {
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
-# Platform configuration (Ollama endpoints from ConfigMap)
-data "kubernetes_config_map_v1" "platform_config" {
-  metadata {
-    name      = "ollama-endpoints"
-    namespace = "coder"
-  }
-}
-
 # ============================================================================
 # CODER PARAMETERS - User-configurable workspace options
 # ============================================================================
@@ -365,82 +357,12 @@ data "coder_parameter" "git_default_branch" {
 data "coder_parameter" "auto_start_firefox" {
   name         = "auto_start_firefox"
   display_name = "Auto-start Firefox"
-  description  = "Automatically launch Firefox with VS Code on first boot"
+  description  = "Automatically open Firefox with VS Code on workspace startup"
   type         = "bool"
   default      = "true"
   icon         = "/icon/firefox.svg"
   mutable      = true
   order        = 31
-}
-
-# AI/Ollama settings parameters (mutable)
-data "coder_parameter" "ollama_temperature" {
-  name         = "ollama_temperature"
-  display_name = "Ollama Temperature"
-  description  = "Default temperature for Ollama AI models (0.0=deterministic, 1.0=creative)"
-  type         = "string"
-  default      = "0.7"
-  icon         = "/icon/ai.svg"
-  mutable      = true
-  order        = 40
-
-  option {
-    name  = "Deterministic (0.0)"
-    value = "0.0"
-  }
-
-  option {
-    name  = "Low Creativity (0.3)"
-    value = "0.3"
-  }
-
-  option {
-    name  = "Balanced (0.5)"
-    value = "0.5"
-  }
-
-  option {
-    name  = "Creative (0.7)"
-    value = "0.7"
-  }
-
-  option {
-    name  = "Very Creative (0.9)"
-    value = "0.9"
-  }
-
-  option {
-    name  = "Maximum Creativity (1.0)"
-    value = "1.0"
-  }
-}
-
-data "coder_parameter" "ollama_context_window" {
-  name         = "ollama_context_window"
-  display_name = "Ollama Context Window"
-  description  = "Context window size for Ollama models (larger = more memory)"
-  type         = "string"
-  default      = "4096"
-  icon         = "/icon/ai.svg"
-  mutable      = true
-  order        = 41
-
-  option {
-    name  = "2048 tokens (Fast)"
-    value = "2048"
-  }
-  option {
-    name  = "4096 tokens (Balanced)"
-    value = "4096"
-  }
-  option {
-    name  = "8192 tokens (Large)"
-    value = "8192"
-  }
-  option {
-    name  = "16384 tokens (Maximum)"
-    value = "16384"
-  }
 }
 
 # Locals for dynamic values
@@ -472,42 +394,28 @@ resource "coder_agent" "main" {
     echo "Installing Continue extension..."
     code-server --install-extension continue.continue || echo "Note: Continue extension may already be installed"
 
-    # Configure Continue with Ollama
-    echo "Configuring Continue with Ollama..."
-    mkdir -p ~/.local/share/code-server/User/globalStorage/continue.continue
+    # Configure Continue with KServe (serverless inference)
+    echo "Configuring Continue with KServe..."
+    mkdir -p ~/.continue
 
-    cat > ~/.local/share/code-server/User/globalStorage/continue.continue/config.json <<'CONTINUE_CONFIG'
+    cat > ~/.continue/config.json <<'CONTINUE_CONFIG'
 {
   "models": [
     {
-      "title": "CodeLlama 7B (Fast)",
-      "provider": "ollama",
-      "model": "codellama:7b",
-      "apiBase": "${data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL}"
-    },
-    {
-      "title": "Qwen2.5 Coder 7B (Smart)",
-      "provider": "ollama",
-      "model": "qwen2.5-coder:7b",
-      "apiBase": "${data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL}"
-    },
-    {
-      "title": "DeepSeek Coder V2 16B (Powerful)",
-      "provider": "ollama",
-      "model": "deepseek-coder-v2:16b",
-      "apiBase": "${data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL}"
+      "title": "Qwen 2.5 Coder 3B",
+      "provider": "openai",
+      "model": "qwen2.5-coder-3b",
+      "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/v1"
     }
   ],
   "tabAutocompleteModel": {
-    "title": "CodeLlama 7B",
-    "provider": "ollama",
-    "model": "codellama:7b",
-    "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+    "title": "Qwen 2.5 Coder 3B",
+    "provider": "openai",
+    "model": "qwen2.5-coder-3b",
+    "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/v1"
   },
   "embeddingsProvider": {
-    "provider": "ollama",
-    "model": "nomic-embed-text",
-    "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+    "provider": "transformers.js"
   },
   "customCommands": [
     {
@@ -535,6 +443,9 @@ resource "coder_agent" "main" {
 CONTINUE_CONFIG
 
     echo "Continue extension configured successfully!"
+    echo ""
+    echo "NOTE: First AI request may take 10-15 minutes (GPU provisioning + model load)"
+    echo "      Subsequent requests will be fast. KServe will buffer your request automatically."
 
     # Start file server for upload/download
     echo "Starting file server..."
@@ -557,7 +468,6 @@ CONTINUE_CONFIG
     GIT_AUTHOR_EMAIL    = data.coder_workspace_owner.me.email
     GIT_COMMITTER_NAME  = coalesce(data.coder_workspace_owner.me.full_name, data.coder_workspace_owner.me.name)
     GIT_COMMITTER_EMAIL = data.coder_workspace_owner.me.email
-    OLLAMA_HOST         = data.kubernetes_config_map_v1.platform_config.data.OLLAMA_URL
   }
 }
 
@@ -766,17 +676,6 @@ resource "kubernetes_pod" "main" {
         name  = "DEFAULT_SHELL"
         value = data.coder_parameter.default_shell.value
       }
-
-      env {
-        name  = "OLLAMA_TEMPERATURE"
-        value = data.coder_parameter.ollama_temperature.value
-      }
-
-      env {
-        name  = "OLLAMA_CONTEXT_WINDOW"
-        value = data.coder_parameter.ollama_context_window.value
-      }
-
       # Resources
       resources {
         requests = {
@@ -803,9 +702,9 @@ resource "kubernetes_pod" "main" {
           port = 6080
         }
         initial_delay_seconds = 10
-        period_seconds        = 10  # Check every 10 seconds (was 5)
-        timeout_seconds       = 5   # Allow 5 seconds per probe (was 3)
-        failure_threshold     = 240 # 240 failures = 40 minutes (was 30 = 2.5min)
+        period_seconds        = 10  # Check every 10 seconds
+        timeout_seconds       = 5   # Allow 5 seconds per probe
+        failure_threshold     = 240 # 240 failures = 40 minutes
       }
 
       # Liveness probe
@@ -868,10 +767,12 @@ output "access_instructions" {
     Installed tools:
        - Languages: Python, Rust, Go, Node.js
        - Editors: VS Code (browser via code-server), Neovim, Vim
-       - AI Code Assistant: Continue extension (powered by Ollama)
+       - AI Code Assistant: Continue extension (powered by KServe)
+         • Model: Qwen 2.5 Coder 3B (serverless, scale-to-zero)
          • Press Ctrl+L to open AI chat
-         • Tab autocomplete with CodeLlama
-         • Select code → Right-click → Continue → Explain/Optimize/Test
+         • Tab autocomplete enabled
+         • Select code → Right-click → Continue → Explain/Optimize/Test/Document
+         • First request: 10-15 min cold start (GPU provision), then fast
        - Shell: Zsh with oh-my-zsh + powerlevel10k
        - Containers: Docker CLI, kubectl, helm
        - System: htop, btop, tmux, fzf, ripgrep
