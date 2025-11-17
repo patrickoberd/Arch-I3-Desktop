@@ -402,43 +402,81 @@ resource "coder_agent" "main" {
 {
   "models": [
     {
-      "title": "Qwen 2.5 Coder 3B",
+      "title": "Qwen 2.5 Coder 3B (Serverless)",
       "provider": "openai",
-      "model": "qwen2.5-coder-3b",
-      "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/v1"
+      "model": "qwen-coder-7b",
+      "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 16384,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
     }
   ],
   "tabAutocompleteModel": {
-    "title": "Qwen 2.5 Coder 3B",
+    "title": "Qwen 2.5 Coder 3B (Autocomplete)",
     "provider": "openai",
-    "model": "qwen2.5-coder-3b",
-    "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/v1"
+    "model": "qwen-coder-7b",
+    "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+    "apiKey": "dummy-key-not-required",
+    "contextLength": 8192,
+    "completionOptions": {
+      "temperature": 0.1,
+      "topP": 0.95,
+      "maxTokens": 256,
+      "presencePenalty": 0.0,
+      "frequencyPenalty": 0.0
+    }
   },
   "embeddingsProvider": {
     "provider": "transformers.js"
   },
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit selected code"
+    },
+    {
+      "name": "comment",
+      "description": "Add comments to code"
+    },
+    {
+      "name": "share",
+      "description": "Export conversation"
+    },
+    {
+      "name": "cmd",
+      "description": "Generate shell command"
+    }
+  ],
   "customCommands": [
-    {
-      "name": "explain",
-      "description": "Explain the selected code",
-      "prompt": "Explain how this code works in detail:\n\n{{{ input }}}"
-    },
-    {
-      "name": "optimize",
-      "description": "Optimize the selected code",
-      "prompt": "Optimize this code for better performance and readability:\n\n{{{ input }}}"
-    },
     {
       "name": "test",
       "description": "Generate tests for the selected code",
       "prompt": "Generate comprehensive unit tests for this code:\n\n{{{ input }}}"
     },
     {
-      "name": "document",
-      "description": "Add documentation to the selected code",
-      "prompt": "Add clear documentation and comments to this code:\n\n{{{ input }}}"
+      "name": "optimize",
+      "description": "Optimize the selected code",
+      "prompt": "Analyze and suggest performance optimizations for this code:\n\n{{{ input }}}"
+    },
+    {
+      "name": "explain",
+      "description": "Explain the selected code",
+      "prompt": "Explain how this code works in detail, including its purpose and key concepts:\n\n{{{ input }}}"
+    },
+    {
+      "name": "docs",
+      "description": "Generate documentation",
+      "prompt": "Generate comprehensive documentation for this code:\n\n{{{ input }}}"
     }
-  ]
+  ],
+  "allowAnonymousTelemetry": false,
+  "docs": []
 }
 CONTINUE_CONFIG
 
