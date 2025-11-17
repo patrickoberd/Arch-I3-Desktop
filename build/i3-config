@@ -210,11 +210,6 @@ bar {
 }
 
 # Application-specific rules
-# Workspace assignments
-for_window [class="Firefox"] move to workspace $ws3
-for_window [class="Thunar"] move to workspace $ws4
-for_window [class="Alacritty" title="^(?!scratchpad).*"] move to workspace $ws1
-
 # Auto-float windows
 for_window [window_role="pop-up"] floating enable
 for_window [window_role="task_dialog"] floating enable

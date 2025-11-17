@@ -402,7 +402,7 @@ resource "coder_agent" "main" {
 {
   "models": [
     {
-      "title": "Qwen 2.5 Coder 3B (Serverless)",
+      "title": "Qwen 2.5 Coder 3B (Fast & Light)",
       "provider": "openai",
       "model": "qwen-coder-7b",
       "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
@@ -415,13 +415,58 @@ resource "coder_agent" "main" {
         "presencePenalty": 0.0,
         "frequencyPenalty": 0.0
       }
+    },
+    {
+      "title": "DeepSeek Coder 6.7B (Best Quality)",
+      "provider": "openai",
+      "model": "deepseek-coder-6.7b",
+      "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 16384,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
+    },
+    {
+      "title": "StarCoder2 3B (619 Languages)",
+      "provider": "openai",
+      "model": "starcoder2-3b",
+      "apiBase": "http://starcoder2-3b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 16384,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
+    },
+    {
+      "title": "Yi Coder 9B (128K Context)",
+      "provider": "openai",
+      "model": "yi-coder-9b",
+      "apiBase": "http://yi-coder-9b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 32768,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
     }
   ],
   "tabAutocompleteModel": {
-    "title": "Qwen 2.5 Coder 3B (Autocomplete)",
+    "title": "DeepSeek Coder 6.7B (Autocomplete)",
     "provider": "openai",
-    "model": "qwen-coder-7b",
-    "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+    "model": "deepseek-coder-6.7b",
+    "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
     "apiKey": "dummy-key-not-required",
     "contextLength": 8192,
     "completionOptions": {
@@ -809,11 +854,14 @@ output "access_instructions" {
        - Languages: Python, Rust, Go, Node.js
        - Editors: VS Code (browser via code-server), Neovim, Vim
        - AI Code Assistant: Continue extension (powered by KServe)
-         • Model: Qwen 2.5 Coder 3B (serverless, scale-to-zero)
+         • Models: 4 available (Qwen 2.5, DeepSeek, StarCoder2, Yi Coder)
+         • Switch models via dropdown in Continue.dev sidebar
+         • Autocomplete: DeepSeek Coder 6.7B (best quality, HumanEval 80.2)
          • Press Ctrl+L to open AI chat
          • Tab autocomplete enabled
          • Select code → Right-click → Continue → Explain/Optimize/Test/Document
          • First request: 10-15 min cold start (GPU provision), then fast
+         • All models scale-to-zero when not in use (KServe serverless)
        - Shell: Zsh with oh-my-zsh + powerlevel10k
        - Containers: Docker CLI, kubectl, helm
        - System: htop, btop, tmux, fzf, ripgrep
