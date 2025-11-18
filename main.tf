@@ -11,8 +11,8 @@ terraform {
 
 # Non-user-facing variables (not exposed as parameters)
 variable "image" {
-  description = "Container image (automatically built via GitHub Actions)"
-  default     = "ghcr.io/patrickoberd/arch-i3-desktop:latest"
+  description = "Container image (cached from GHCR to local registry)"
+  default     = "docker-registry.registry.svc.cluster.local:5000/patrickoberd/arch-i3-desktop:latest"
   type        = string
 }
 
@@ -386,6 +386,10 @@ resource "coder_agent" "main" {
     timeout 60 bash -c 'until nc -z localhost 6080; do sleep 1; done'
     echo "noVNC is ready!"
 
+    # Wait for Selkies WebRTC to be ready
+    timeout 90 bash -c 'until nc -z localhost 8082; do sleep 1; done'
+    echo "Selkies WebRTC is ready!"
+
     # Wait for code-server to be ready
     timeout 60 bash -c 'until nc -z localhost 8080; do sleep 1; done'
     echo "code-server is ready!"
@@ -570,6 +574,23 @@ resource "coder_app" "novnc" {
   #   interval  = 5
   #   threshold = 10
   # }
+}
+
+# Selkies WebRTC desktop access (native clipboard support!)
+resource "coder_app" "selkies" {
+  agent_id     = coder_agent.main.id
+  slug         = "selkies"
+  display_name = "🚀 Desktop (Selkies WebRTC)"
+  url          = "http://localhost:8082"
+  icon         = "https://cdn.icon-icons.com/icons2/2699/PNG/512/archlinux_logo_icon_167835.png"
+  subdomain    = true
+  share        = "owner"
+
+  healthcheck {
+    url       = "http://localhost:8082"
+    interval  = 5
+    threshold = 15
+  }
 }
 
 # VS Code (code-server) web IDE access
@@ -829,7 +850,11 @@ output "access_instructions" {
     Arch Linux i3wm Desktop Workspace
 
     Access your desktop:
-       Click the "Desktop (noVNC)" app in the Coder dashboard
+       🖥️ Desktop (noVNC):       Standard VNC access (copy button in toolbar)
+       🚀 Desktop (Selkies):     WebRTC access with NATIVE CLIPBOARD SUPPORT!
+                                 → Use Ctrl+C/Ctrl+V directly in your browser!
+                                 → Lower latency, smoother experience
+                                 → Recommended for daily use
 
     Access VS Code Web IDE:
        Click the "VS Code" app in the Coder dashboard
@@ -838,6 +863,10 @@ output "access_instructions" {
 
     Access terminal:
        Click the "Terminal" app or use SSH
+
+    Clipboard Comparison:
+       noVNC:    Use clipboard button in top toolbar (limited)
+       Selkies:  Native Ctrl+C/Ctrl+V works directly! 🎉
 
     i3wm Quick Start:
        - Mod+Space:    Quick Actions Menu (apps, screenshots, file server, tools)

@@ -183,6 +183,41 @@ echo "Starting noVNC on port 6080..."
 /opt/websockify/run --web /opt/noVNC 6080 localhost:5901 &
 NOVNC_PID=$!
 
+# Start PulseAudio for Selkies audio support
+echo "Starting PulseAudio..."
+pulseaudio --start --exit-idle-time=-1 2>/dev/null || true
+sleep 1
+
+# Start Selkies GStreamer WebRTC
+echo "Starting Selkies WebRTC on port 8081..."
+export DISPLAY=:1
+export PULSE_SERVER=unix:/tmp/runtime-coder/pulse/native
+
+# Configure Selkies for CPU encoding (no GPU)
+export SELKIES_ENCODER=x264enc
+export SELKIES_VIDEO_BITRATE=4000
+export SELKIES_FRAMERATE=60
+export SELKIES_AUDIO_BITRATE=128000
+export SELKIES_ENABLE_RESIZE=true
+
+# Start Selkies in background
+cd /opt/selkies-gstreamer
+./selkies-gstreamer \
+  --addr=0.0.0.0 \
+  --port=8081 \
+  --enable_https=false \
+  &
+SELKIES_PID=$!
+cd ~
+
+# Wait for Selkies to initialize
+sleep 2
+
+# Start nginx reverse proxy for Selkies
+echo "Starting nginx on port 8082..."
+nginx -c /etc/nginx/nginx.conf &
+NGINX_PID=$!
+
 # Start code-server (VS Code in browser)
 echo "Starting code-server on port 8080..."
 # Create config for code-server
@@ -202,10 +237,15 @@ echo ""
 echo "Desktop environment is ready"
 echo ""
 echo "Access methods:"
-echo "  - Desktop (noVNC):  http://localhost:6080"
-echo "  - VS Code Web IDE:  http://localhost:8080 (open in Firefox)"
-echo "  - VNC Access:       Via Coder dashboard (authenticated)"
-echo "  - Security:         localhost-only, no password needed"
+echo "  - Desktop (noVNC):       http://localhost:6080"
+echo "  - Desktop (Selkies):     http://localhost:8082 (WebRTC - native clipboard!)"
+echo "  - VS Code Web IDE:       http://localhost:8080 (open in Firefox)"
+echo "  - VNC Access:            Via Coder dashboard (authenticated)"
+echo "  - Security:              localhost-only, no password needed"
+echo ""
+echo "Clipboard support:"
+echo "  - noVNC:    Copy button in top bar (limited)"
+echo "  - Selkies:  Native Ctrl+C/Ctrl+V works directly!"
 echo ""
 echo "i3wm keybindings:"
 echo "  - Mod+Space:        Quick Actions Menu (apps, screenshots, tools)"
@@ -254,7 +294,7 @@ echo "Workspace is running. Press Ctrl+C to stop."
 echo ""
 
 # Trap to cleanup on exit
-trap "echo 'Shutting down...'; kill $XVNC_PID $NOVNC_PID $CODE_SERVER_PID $I3_PID ${CODER_PID:-} 2>/dev/null; exit" SIGTERM SIGINT
+trap "echo 'Shutting down...'; kill $XVNC_PID $NOVNC_PID $SELKIES_PID $NGINX_PID $CODE_SERVER_PID $I3_PID ${CODER_PID:-} 2>/dev/null; pulseaudio --kill 2>/dev/null; exit" SIGTERM SIGINT
 
 while true; do
     # Check if Xvnc is still running
@@ -279,6 +319,26 @@ while true; do
         echo "noVNC died, restarting..."
         /opt/websockify/run --web /opt/noVNC 6080 localhost:5901 &
         NOVNC_PID=$!
+    fi
+
+    # Check if Selkies is still running
+    if ! kill -0 $SELKIES_PID 2>/dev/null; then
+        echo "Selkies died, restarting..."
+        cd /opt/selkies-gstreamer
+        ./selkies-gstreamer \
+          --addr=0.0.0.0 \
+          --port=8081 \
+          --enable_https=false \
+          &
+        SELKIES_PID=$!
+        cd ~
+    fi
+
+    # Check if nginx is still running
+    if ! kill -0 $NGINX_PID 2>/dev/null; then
+        echo "nginx died, restarting..."
+        nginx -c /etc/nginx/nginx.conf &
+        NGINX_PID=$!
     fi
 
     # Check if code-server is still running

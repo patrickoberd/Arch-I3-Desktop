@@ -63,6 +63,24 @@ RUN pacman -S --noconfirm \
     # Clean package cache to reduce image size
     rm -rf /var/cache/pacman/pkg/*
 
+# Install GStreamer and Selkies dependencies
+RUN pacman -S --noconfirm \
+    # GStreamer framework
+    gstreamer gst-plugins-base gst-plugins-good \
+    gst-plugins-bad gst-plugins-ugly \
+    # Codecs and libraries
+    x264 libvpx opus libopus libpulse \
+    # Python packages for Selkies
+    python-websockets python-aiohttp python-watchdog python-pynput \
+    # Web server for Selkies
+    nginx \
+    # Audio server
+    pulseaudio \
+    # System libraries
+    libva wayland-protocols && \
+    # Clean package cache
+    rm -rf /var/cache/pacman/pkg/*
+
 # Generate locales for international support
 # Remove NoExtract rules that block locale files, then reinstall glibc
 RUN sed -i '/NoExtract.*i18n/d' /etc/pacman.conf && \
@@ -79,6 +97,95 @@ RUN mkdir -p /opt/noVNC /opt/websockify && \
     curl -L https://github.com/novnc/noVNC/archive/v1.4.0.tar.gz | tar -xz -C /opt/noVNC --strip-components=1 && \
     curl -L https://github.com/novnc/websockify/archive/v0.11.0.tar.gz | tar -xz -C /opt/websockify --strip-components=1 && \
     ln -s /opt/noVNC/vnc.html /opt/noVNC/index.html
+
+# Install Selkies-GStreamer (WebRTC desktop streaming)
+RUN SELKIES_VERSION=1.6.2 && \
+    mkdir -p /opt/selkies-gstreamer && \
+    curl -fsSL "https://github.com/selkies-project/selkies-gstreamer/releases/download/v${SELKIES_VERSION}/selkies-gstreamer-portable-v${SELKIES_VERSION}_amd64.tar.gz" \
+      -o /tmp/selkies.tar.gz && \
+    tar -xzf /tmp/selkies.tar.gz -C /opt/selkies-gstreamer --strip-components=1 && \
+    rm /tmp/selkies.tar.gz && \
+    # Extract web components
+    mkdir -p /opt/selkies-gstreamer-web && \
+    tar -xzf /opt/selkies-gstreamer/selkies-gstreamer-web*.tar.gz -C /opt/selkies-gstreamer-web && \
+    # Make executable
+    chmod +x /opt/selkies-gstreamer/selkies-gstreamer
+
+# Configure nginx for Selkies WebRTC
+RUN mkdir -p /etc/nginx/logs /tmp/nginx && \
+    cat > /etc/nginx/nginx.conf << 'NGINXCONF'
+worker_processes auto;
+pid /tmp/nginx/nginx.pid;
+error_log /etc/nginx/logs/error.log warn;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    access_log /etc/nginx/logs/access.log;
+
+    # Client body temp path (must be writable by non-root)
+    client_body_temp_path /tmp/nginx/client_body;
+    proxy_temp_path /tmp/nginx/proxy;
+    fastcgi_temp_path /tmp/nginx/fastcgi;
+    uwsgi_temp_path /tmp/nginx/uwsgi;
+    scgi_temp_path /tmp/nginx/scgi;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # WebRTC requires large headers for SDP
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    large_client_header_buffers 4 32k;
+
+    server {
+        listen 8082;
+        server_name _;
+
+        # Serve Selkies web UI
+        location / {
+            root /opt/selkies-gstreamer-web;
+            index index.html;
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Proxy WebSocket connections to Selkies
+        location /ws {
+            proxy_pass http://127.0.0.1:8081;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # WebSocket timeouts
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+
+        # Proxy signaling endpoint
+        location /signaling {
+            proxy_pass http://127.0.0.1:8081;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
+NGINXCONF
 
 # Install code-server (VS Code in browser) - direct binary to avoid AUR/makepkg issues
 RUN CODE_SERVER_VERSION=4.96.2 && \
@@ -198,7 +305,8 @@ ENV SHELL=/bin/zsh
 WORKDIR /home/coder
 USER coder
 
-# Expose VNC, noVNC, code-server, and file server ports
-EXPOSE 5901 6080 8080 8888
+# Expose VNC, noVNC, code-server, Selkies, and file server ports
+# 5901: VNC server, 6080: noVNC, 8080: code-server, 8082: Selkies WebRTC, 8888: file server
+EXPOSE 5901 6080 8080 8082 8888
 
 CMD ["/usr/local/bin/start-vnc.sh"]
