@@ -354,17 +354,6 @@ data "coder_parameter" "git_default_branch" {
   }
 }
 
-data "coder_parameter" "auto_start_firefox" {
-  name         = "auto_start_firefox"
-  display_name = "Auto-start Firefox"
-  description  = "Automatically open Firefox with VS Code on workspace startup"
-  type         = "bool"
-  default      = "true"
-  icon         = "/icon/firefox.svg"
-  mutable      = true
-  order        = 31
-}
-
 # Locals for dynamic values
 locals {
   namespace = "coder-${data.coder_workspace_owner.me.name}-${data.coder_workspace.me.name}"
@@ -379,162 +368,50 @@ resource "coder_agent" "main" {
     set -e
 
     # Wait for VNC to be ready
+    echo "Waiting for VNC server..."
     timeout 60 bash -c 'until nc -z localhost 5901; do sleep 1; done'
-    echo "VNC server is ready!"
+    echo "✓ VNC server is ready!"
 
     # Wait for noVNC to be ready
+    echo "Waiting for noVNC..."
     timeout 60 bash -c 'until nc -z localhost 6080; do sleep 1; done'
-    echo "noVNC is ready!"
+    echo "✓ noVNC is ready!"
 
     # Wait for code-server to be ready
+    echo "Waiting for code-server..."
     timeout 60 bash -c 'until nc -z localhost 8080; do sleep 1; done'
-    echo "code-server is ready!"
+    echo "✓ code-server is ready!"
 
-    # Install Continue extension for AI code assistance
-    echo "Installing Continue extension..."
-    code-server --install-extension continue.continue || echo "Note: Continue extension may already be installed"
+    # Skip Continue installation - already installed in Docker image during first-run
+    # Skip Continue config - already configured in Docker image and start-vnc.sh
+    # This preserves user customizations to ~/.continue/config.json
 
-    # Configure Continue with KServe (serverless inference)
-    echo "Configuring Continue with KServe..."
-    mkdir -p ~/.continue
-
-    cat > ~/.continue/config.json <<'CONTINUE_CONFIG'
-{
-  "models": [
-    {
-      "title": "Qwen 2.5 Coder 3B (Fast & Light)",
-      "provider": "openai",
-      "model": "qwen-coder-7b",
-      "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
-      "apiKey": "dummy-key-not-required",
-      "contextLength": 16384,
-      "completionOptions": {
-        "temperature": 0.2,
-        "topP": 0.95,
-        "maxTokens": 2048,
-        "presencePenalty": 0.0,
-        "frequencyPenalty": 0.0
-      }
-    },
-    {
-      "title": "DeepSeek Coder 6.7B (Best Quality)",
-      "provider": "openai",
-      "model": "deepseek-coder-6.7b",
-      "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
-      "apiKey": "dummy-key-not-required",
-      "contextLength": 16384,
-      "completionOptions": {
-        "temperature": 0.2,
-        "topP": 0.95,
-        "maxTokens": 2048,
-        "presencePenalty": 0.0,
-        "frequencyPenalty": 0.0
-      }
-    },
-    {
-      "title": "StarCoder2 3B (619 Languages)",
-      "provider": "openai",
-      "model": "starcoder2-3b",
-      "apiBase": "http://starcoder2-3b-predictor.kserve-inference.svc.cluster.local/openai/v1",
-      "apiKey": "dummy-key-not-required",
-      "contextLength": 16384,
-      "completionOptions": {
-        "temperature": 0.2,
-        "topP": 0.95,
-        "maxTokens": 2048,
-        "presencePenalty": 0.0,
-        "frequencyPenalty": 0.0
-      }
-    },
-    {
-      "title": "Yi Coder 9B (128K Context)",
-      "provider": "openai",
-      "model": "yi-coder-9b",
-      "apiBase": "http://yi-coder-9b-predictor.kserve-inference.svc.cluster.local/openai/v1",
-      "apiKey": "dummy-key-not-required",
-      "contextLength": 32768,
-      "completionOptions": {
-        "temperature": 0.2,
-        "topP": 0.95,
-        "maxTokens": 2048,
-        "presencePenalty": 0.0,
-        "frequencyPenalty": 0.0
-      }
-    }
-  ],
-  "tabAutocompleteModel": {
-    "title": "DeepSeek Coder 6.7B (Autocomplete)",
-    "provider": "openai",
-    "model": "deepseek-coder-6.7b",
-    "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
-    "apiKey": "dummy-key-not-required",
-    "contextLength": 8192,
-    "completionOptions": {
-      "temperature": 0.1,
-      "topP": 0.95,
-      "maxTokens": 256,
-      "presencePenalty": 0.0,
-      "frequencyPenalty": 0.0
-    }
-  },
-  "embeddingsProvider": {
-    "provider": "transformers.js"
-  },
-  "slashCommands": [
-    {
-      "name": "edit",
-      "description": "Edit selected code"
-    },
-    {
-      "name": "comment",
-      "description": "Add comments to code"
-    },
-    {
-      "name": "share",
-      "description": "Export conversation"
-    },
-    {
-      "name": "cmd",
-      "description": "Generate shell command"
-    }
-  ],
-  "customCommands": [
-    {
-      "name": "test",
-      "description": "Generate tests for the selected code",
-      "prompt": "Generate comprehensive unit tests for this code:\n\n{{{ input }}}"
-    },
-    {
-      "name": "optimize",
-      "description": "Optimize the selected code",
-      "prompt": "Analyze and suggest performance optimizations for this code:\n\n{{{ input }}}"
-    },
-    {
-      "name": "explain",
-      "description": "Explain the selected code",
-      "prompt": "Explain how this code works in detail, including its purpose and key concepts:\n\n{{{ input }}}"
-    },
-    {
-      "name": "docs",
-      "description": "Generate documentation",
-      "prompt": "Generate comprehensive documentation for this code:\n\n{{{ input }}}"
-    }
-  ],
-  "allowAnonymousTelemetry": false,
-  "docs": []
-}
-CONTINUE_CONFIG
-
-    echo "Continue extension configured successfully!"
-    echo ""
-    echo "NOTE: First AI request may take 10-15 minutes (GPU provisioning + model load)"
-    echo "      Subsequent requests will be fast. KServe will buffer your request automatically."
+    # Verify Continue config exists (should be created by start-vnc.sh on first run)
+    if [ ! -f ~/.continue/config.json ]; then
+      echo "⚠ Warning: Continue config not found. AI features may not work."
+      echo "  Expected at: ~/.continue/config.json"
+      echo "  This should have been created during first workspace initialization."
+    fi
 
     # Start file server for upload/download
     echo "Starting file server..."
-    /usr/local/bin/file-server.sh start
+    /usr/local/bin/file-server.sh start || {
+      echo "✗ Failed to start file server"
+      echo "  Check /tmp/file-server.log for details"
+      exit 1
+    }
+    echo "✓ File server started successfully"
 
-    echo "Workspace is fully initialized"
+    echo ""
+    echo "✓ Workspace is fully initialized"
+    echo ""
+    echo "AI Features:"
+    echo "  - Continue.dev extension installed"
+    echo "  - 4 AI models configured (KServe inference)"
+    echo "  - Tab autocomplete enabled"
+    echo ""
+    echo "NOTE: First AI request may take 10-15 minutes (GPU provisioning + model load)"
+    echo "      Subsequent requests will be fast. KServe will buffer your request automatically."
   EOT
 
   # Metadata
@@ -748,11 +625,6 @@ resource "kubernetes_pod" "main" {
       env {
         name  = "VSCODE_THEME"
         value = data.coder_parameter.vscode_theme.value
-      }
-
-      env {
-        name  = "AUTO_START_FIREFOX"
-        value = tostring(data.coder_parameter.auto_start_firefox.value)
       }
 
       env {
