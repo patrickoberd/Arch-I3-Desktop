@@ -416,3 +416,4 @@ This template is provided as-is for use with Coder. Feel free to modify and dist
 ## 🎉 Enjoy Your Desktop!
 
 You now have a full Arch Linux desktop environment running in Kubernetes, accessible from anywhere with just a browser. Happy coding! 🚀
+# Trigger rebuild
