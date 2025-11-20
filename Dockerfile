@@ -136,8 +136,8 @@ RUN mkdir -p /etc/skel/.continue && \
     {
       "title": "DeepSeek Coder 6.7B (Best Quality)",
       "provider": "openai",
-      "model": "deepseek-coder-6.7b",
-      "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "model": "deepseek-coder-6b",
+      "apiBase": "http://deepseek-coder-6b-predictor.kserve-inference.svc.cluster.local/openai/v1",
       "apiKey": "dummy-key-not-required",
       "contextLength": 16384,
       "completionOptions": {
@@ -182,8 +182,8 @@ RUN mkdir -p /etc/skel/.continue && \
   "tabAutocompleteModel": {
     "title": "DeepSeek Coder 6.7B (Autocomplete)",
     "provider": "openai",
-    "model": "deepseek-coder-6.7b",
-    "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+    "model": "deepseek-coder-6b",
+    "apiBase": "http://deepseek-coder-6b-predictor.kserve-inference.svc.cluster.local/openai/v1",
     "apiKey": "dummy-key-not-required",
     "contextLength": 8192,
     "completionOptions": {
