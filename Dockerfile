@@ -113,33 +113,132 @@ COPY build/dunstrc /etc/skel/.config/dunst/dunstrc
 COPY build/.zshrc /etc/skel/.zshrc
 COPY build/.tmux.conf /etc/skel/.tmux.conf
 
-# Create Continue.dev configuration for Ollama AI coding assistant
+# Create Continue.dev configuration for KServe AI coding assistant
 RUN mkdir -p /etc/skel/.continue && \
     cat > /etc/skel/.continue/config.json << 'EOF'
 {
   "models": [
     {
-      "title": "Llama 3.3 70B",
-      "provider": "ollama",
-      "model": "llama3.3:70b",
-      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+      "title": "Qwen 2.5 Coder 7B (Fast & Light)",
+      "provider": "openai",
+      "model": "qwen-coder-7b",
+      "apiBase": "http://qwen-coder-7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 16384,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
     },
     {
-      "title": "CodeLlama",
-      "provider": "ollama",
-      "model": "codellama",
-      "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+      "title": "DeepSeek Coder 6.7B (Best Quality)",
+      "provider": "openai",
+      "model": "deepseek-coder-6.7b",
+      "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 16384,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
+    },
+    {
+      "title": "StarCoder2 3B (619 Languages)",
+      "provider": "openai",
+      "model": "starcoder2-3b",
+      "apiBase": "http://starcoder2-3b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 16384,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
+    },
+    {
+      "title": "Yi Coder 9B (128K Context)",
+      "provider": "openai",
+      "model": "yi-coder-9b",
+      "apiBase": "http://yi-coder-9b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+      "apiKey": "dummy-key-not-required",
+      "contextLength": 32768,
+      "completionOptions": {
+        "temperature": 0.2,
+        "topP": 0.95,
+        "maxTokens": 2048,
+        "presencePenalty": 0.0,
+        "frequencyPenalty": 0.0
+      }
     }
   ],
   "tabAutocompleteModel": {
-    "title": "Starcoder 3b",
-    "provider": "ollama",
-    "model": "starcoder2:3b",
-    "apiBase": "http://ollama.ollama.svc.cluster.local:11434"
+    "title": "DeepSeek Coder 6.7B (Autocomplete)",
+    "provider": "openai",
+    "model": "deepseek-coder-6.7b",
+    "apiBase": "http://deepseek-coder-6.7b-predictor.kserve-inference.svc.cluster.local/openai/v1",
+    "apiKey": "dummy-key-not-required",
+    "contextLength": 8192,
+    "completionOptions": {
+      "temperature": 0.1,
+      "topP": 0.95,
+      "maxTokens": 256,
+      "presencePenalty": 0.0,
+      "frequencyPenalty": 0.0
+    }
   },
   "embeddingsProvider": {
     "provider": "transformers.js"
-  }
+  },
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit selected code"
+    },
+    {
+      "name": "comment",
+      "description": "Add comments to code"
+    },
+    {
+      "name": "share",
+      "description": "Export conversation"
+    },
+    {
+      "name": "cmd",
+      "description": "Generate shell command"
+    }
+  ],
+  "customCommands": [
+    {
+      "name": "test",
+      "description": "Generate tests for the selected code",
+      "prompt": "Generate comprehensive unit tests for this code:\n\n{{{ input }}}"
+    },
+    {
+      "name": "optimize",
+      "description": "Optimize the selected code",
+      "prompt": "Analyze and suggest performance optimizations for this code:\n\n{{{ input }}}"
+    },
+    {
+      "name": "explain",
+      "description": "Explain the selected code",
+      "prompt": "Explain how this code works in detail, including its purpose and key concepts:\n\n{{{ input }}}"
+    },
+    {
+      "name": "docs",
+      "description": "Generate documentation",
+      "prompt": "Generate comprehensive documentation for this code:\n\n{{{ input }}}"
+    }
+  ],
+  "allowAnonymousTelemetry": false,
+  "docs": []
 }
 EOF
 
